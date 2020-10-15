@@ -60,8 +60,9 @@ public final class ClasspathInterceptorChainFactory {
 
     private Collection<ExecutionInterceptor> createExecutionInterceptorsFromClasspath(String path) {
         try {
-            return createExecutionInterceptorsFromResources(classLoader().getResources(path))
-                .collect(Collectors.toMap(p -> p.getClass().getSimpleName(), p -> p, (p1, p2) -> p1)).values();
+            Enumeration<URL> resources = classLoader().getResources(path);
+            Stream<ExecutionInterceptor> executionInterceptorsFromResources = createExecutionInterceptorsFromResources(resources);
+            return executionInterceptorsFromResources.collect(Collectors.toMap(p -> p.getClass().getSimpleName(), p -> p, (p1, p2) -> p1)).values();
         } catch (IOException e) {
             throw SdkClientException.builder()
                                     .message("Unable to instantiate execution interceptor chain.")
