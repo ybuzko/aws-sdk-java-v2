@@ -15,17 +15,25 @@
 
 package software.amazon.awssdk.benchmark.marshaller.dynamodb;
 
+import static software.amazon.awssdk.core.client.config.SdkClientOption.ENDPOINT;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.util.Map;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.profile.StackProfiler;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
+import software.amazon.awssdk.core.client.config.SdkClientConfiguration;
 import software.amazon.awssdk.core.http.HttpResponseHandler;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.http.AbortableInputStream;
@@ -69,6 +77,7 @@ public class V2DynamoDbAttributeValue {
         .defaultServiceExceptionSupplier(DynamoDbException::builder)
         .protocol(AwsJsonProtocol.AWS_JSON)
         .protocolVersion("1.0")
+        .clientConfiguration(SdkClientConfiguration.builder().option(ENDPOINT, URI.create("https://localhost")).build())
         .registerModeledException(
             ExceptionMetadata.builder().errorCode("ResourceInUseException")
                              .exceptionBuilderSupplier(ResourceInUseException::builder).build())
@@ -244,5 +253,14 @@ public class V2DynamoDbAttributeValue {
 
     private static AwsJsonProtocolFactory getJsonProtocolFactory() {
         return JSON_PROTOCOL_FACTORY;
+    }
+
+
+    public static void main(String... args) throws Exception {
+        Options opt = new OptionsBuilder()
+            .include(V2DynamoDbAttributeValue.class.getSimpleName())
+            .addProfiler(StackProfiler.class)
+            .build();
+        new Runner(opt).run();
     }
 }
