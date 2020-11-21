@@ -45,6 +45,7 @@ import software.amazon.awssdk.benchmark.enhanced.dynamodb.EnhancedClientPutV1Map
 import software.amazon.awssdk.benchmark.enhanced.dynamodb.EnhancedClientQueryV1MapperComparisonBenchmark;
 import software.amazon.awssdk.benchmark.enhanced.dynamodb.EnhancedClientScanV1MapperComparisonBenchmark;
 import software.amazon.awssdk.benchmark.enhanced.dynamodb.EnhancedClientUpdateV1MapperComparisonBenchmark;
+import software.amazon.awssdk.benchmark.marshaller.dynamodb.V2DynamoDbAttributeValue;
 import software.amazon.awssdk.utils.Logger;
 
 
@@ -92,10 +93,13 @@ public class BenchmarkRunner {
 
     public static void main(String... args) throws RunnerException, JsonProcessingException {
         List<String> benchmarksToRun = new ArrayList<>();
-        benchmarksToRun.addAll(SYNC_BENCHMARKS);
-        benchmarksToRun.addAll(ASYNC_BENCHMARKS);
-        benchmarksToRun.addAll(PROTOCOL_BENCHMARKS);
-        benchmarksToRun.addAll(COLD_START_BENCHMARKS);
+//        benchmarksToRun.addAll(SYNC_BENCHMARKS);
+//        benchmarksToRun.addAll(ASYNC_BENCHMARKS);
+//        benchmarksToRun.addAll(PROTOCOL_BENCHMARKS);
+//        benchmarksToRun.addAll(COLD_START_BENCHMARKS);
+
+        benchmarksToRun.add(V2DynamoDbAttributeValue.class.getSimpleName());
+
 
         log.info(() -> "Skipping tests, to reduce benchmark times: \n" + MAPPER_BENCHMARKS + "\n" + METRIC_BENCHMARKS);
 
