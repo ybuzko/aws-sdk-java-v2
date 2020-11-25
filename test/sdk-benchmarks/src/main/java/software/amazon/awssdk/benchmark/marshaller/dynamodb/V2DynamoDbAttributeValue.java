@@ -15,6 +15,8 @@
 
 package software.amazon.awssdk.benchmark.marshaller.dynamodb;
 
+import static software.amazon.awssdk.benchmark.utils.BenchmarkUtils.awaitCountdownLatchUninterruptibly;
+import static software.amazon.awssdk.benchmark.utils.BenchmarkUtils.countDownUponCompletion;
 import static software.amazon.awssdk.core.client.config.SdkClientOption.ENDPOINT;
 
 import java.io.ByteArrayInputStream;
@@ -24,11 +26,24 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OperationsPerInvocation;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
+import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.profile.StackProfiler;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
@@ -72,6 +87,7 @@ import software.amazon.awssdk.services.dynamodb.transform.PutItemRequestMarshall
 
 public class V2DynamoDbAttributeValue {
 
+    private static final int MARSHALLING_UNMARHSALLING_CONCURRENCY = 5000;
     private static final AwsJsonProtocolFactory JSON_PROTOCOL_FACTORY = AwsJsonProtocolFactory
         .builder()
         .defaultServiceExceptionSupplier(DynamoDbException::builder)
@@ -151,15 +167,56 @@ public class V2DynamoDbAttributeValue {
                                                            GetItemResponse::builder);
     }
 
-    @Benchmark
-    public Object putItem(PutItemState s) {
-        return putItemRequestMarshaller().marshall(s.getReq());
-    }
+//    @Benchmark
+//    public Object putItem(PutItemState s) {
+//        return putItemRequestMarshaller().marshall(s.getReq());
+//    }
 
+//    @Benchmark
+//    @OperationsPerInvocation(MARSHALLING_UNMARHSALLING_CONCURRENCY)
+//    public void concurrentPutItem(PutItemState s, Blackhole blackhole) {
+//        CountDownLatch countDownLatch = new CountDownLatch(CONCURRENT_CALLS);
+//        for (int i = 0; i < MARSHALLING_UNMARHSALLING_CONCURRENCY; i++) {
+//            CompletableFuture<Void> future =
+//                CompletableFuture.runAsync(() -> putItemRequestMarshaller().marshall(s.getReq()), executors);
+//            countDownUponCompletion(blackhole, future, countDownLatch);
+//        }
+//
+//        awaitCountdownLatchUninterruptibly(countDownLatch, 10, TimeUnit.SECONDS);
+//    }
+
+    @Warmup(iterations = 3, time = 15, timeUnit = TimeUnit.SECONDS)
+    @Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
+    @Fork(2) // To reduce difference between each run
+    @BenchmarkMode(Mode.Throughput)
     @Benchmark
     public Object getItem(GetItemState s) throws Exception {
         SdkHttpFullResponse resp = fullResponse(s.testItem);
         return getItemResponseJsonResponseHandler().handle(resp, new ExecutionAttributes());
+    }
+
+    @Warmup(iterations = 3, time = 15, timeUnit = TimeUnit.SECONDS)
+    @Measurement(iterations = 5, time = 10, timeUnit = TimeUnit.SECONDS)
+    @Fork(2) // To reduce difference between each run
+    @BenchmarkMode(Mode.Throughput)
+    @Benchmark
+    @OperationsPerInvocation(MARSHALLING_UNMARHSALLING_CONCURRENCY)
+    public void concurrentGetItem(GetItemState s, Blackhole blackhole) {
+        SdkHttpFullResponse resp = fullResponse(s.testItem);
+        CountDownLatch countDownLatch = new CountDownLatch(MARSHALLING_UNMARHSALLING_CONCURRENCY);
+        for (int i = 0; i < MARSHALLING_UNMARHSALLING_CONCURRENCY; i++) {
+            CompletableFuture<Void> future =
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        getItemResponseJsonResponseHandler().handle(resp, new ExecutionAttributes());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }, s.executors);
+            countDownUponCompletion(blackhole, future, countDownLatch);
+        }
+
+        awaitCountdownLatchUninterruptibly(countDownLatch, 10, TimeUnit.SECONDS);
     }
 
     @State(Scope.Benchmark)
@@ -183,6 +240,18 @@ public class V2DynamoDbAttributeValue {
     public static class GetItemState {
         @Param({"TINY", "SMALL", "HUGE"})
         private TestItemUnmarshalling testItem;
+
+        private ExecutorService executors;
+
+        @Setup
+        public void setup() {
+            executors = Executors.newFixedThreadPool(100);
+        }
+
+        @TearDown
+        public void tearDown() throws Exception {
+            executors.shutdown();
+        }
     }
 
     public enum TestItem {
