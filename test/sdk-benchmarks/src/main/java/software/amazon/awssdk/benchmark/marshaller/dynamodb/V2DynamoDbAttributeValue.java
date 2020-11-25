@@ -15,7 +15,6 @@
 
 package software.amazon.awssdk.benchmark.marshaller.dynamodb;
 
-import static software.amazon.awssdk.benchmark.utils.BenchmarkConstant.CONCURRENT_CALLS;
 import static software.amazon.awssdk.benchmark.utils.BenchmarkUtils.awaitCountdownLatchUninterruptibly;
 import static software.amazon.awssdk.benchmark.utils.BenchmarkUtils.countDownUponCompletion;
 import static software.amazon.awssdk.core.client.config.SdkClientOption.ENDPOINT;
@@ -88,7 +87,7 @@ import software.amazon.awssdk.services.dynamodb.transform.PutItemRequestMarshall
 
 public class V2DynamoDbAttributeValue {
 
-    private static final int MARSHALLING_UNMARHSALLING_CONCURRENCY = 1000;
+    private static final int MARSHALLING_UNMARHSALLING_CONCURRENCY = 5000;
     private static final AwsJsonProtocolFactory JSON_PROTOCOL_FACTORY = AwsJsonProtocolFactory
         .builder()
         .defaultServiceExceptionSupplier(DynamoDbException::builder)
@@ -204,7 +203,7 @@ public class V2DynamoDbAttributeValue {
     @OperationsPerInvocation(MARSHALLING_UNMARHSALLING_CONCURRENCY)
     public void concurrentGetItem(GetItemState s, Blackhole blackhole) {
         SdkHttpFullResponse resp = fullResponse(s.testItem);
-        CountDownLatch countDownLatch = new CountDownLatch(CONCURRENT_CALLS);
+        CountDownLatch countDownLatch = new CountDownLatch(MARSHALLING_UNMARHSALLING_CONCURRENCY);
         for (int i = 0; i < MARSHALLING_UNMARHSALLING_CONCURRENCY; i++) {
             CompletableFuture<Void> future =
                 CompletableFuture.runAsync(() -> {
@@ -246,7 +245,7 @@ public class V2DynamoDbAttributeValue {
 
         @Setup
         public void setup() {
-            executors = Executors.newFixedThreadPool(MARSHALLING_UNMARHSALLING_CONCURRENCY);
+            executors = Executors.newFixedThreadPool(100);
         }
 
         @TearDown
