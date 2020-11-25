@@ -15,7 +15,11 @@
 
 package software.amazon.awssdk.protocols.json.internal;
 
+import static com.fasterxml.jackson.core.JsonFactory.Feature.CANONICALIZE_FIELD_NAMES;
+import static com.fasterxml.jackson.core.JsonFactory.Feature.INTERN_FIELD_NAMES;
+
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonFactoryBuilder;
 import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.protocols.json.BaseAwsStructuredJsonFactory;
 import software.amazon.awssdk.protocols.json.SdkJsonGenerator;
@@ -31,7 +35,10 @@ public final class AwsStructuredPlainJsonFactory {
      * Recommended to share JsonFactory instances per http://wiki.fasterxml
      * .com/JacksonBestPracticesPerformance
      */
-    private static final JsonFactory JSON_FACTORY = new JsonFactory();
+    private static final JsonFactory JSON_FACTORY = new JsonFactoryBuilder()
+        .disable(INTERN_FIELD_NAMES)
+        .disable(CANONICALIZE_FIELD_NAMES)
+        .build();
 
     public static final BaseAwsStructuredJsonFactory SDK_JSON_FACTORY = new BaseAwsStructuredJsonFactory(JSON_FACTORY) {
         @Override
