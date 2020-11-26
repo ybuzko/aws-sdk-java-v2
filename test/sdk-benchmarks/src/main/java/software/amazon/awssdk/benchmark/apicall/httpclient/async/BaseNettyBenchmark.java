@@ -15,6 +15,7 @@
 
 package software.amazon.awssdk.benchmark.apicall.httpclient.async;
 
+import static software.amazon.awssdk.benchmark.utils.BenchmarkConstant.CONCURRENCY_50;
 import static software.amazon.awssdk.benchmark.utils.BenchmarkConstant.CONCURRENT_CALLS;
 import static software.amazon.awssdk.benchmark.utils.BenchmarkUtils.awaitCountdownLatchUninterruptibly;
 import static software.amazon.awssdk.benchmark.utils.BenchmarkUtils.countDownUponCompletion;
@@ -36,10 +37,10 @@ public abstract class BaseNettyBenchmark implements SdkHttpClientBenchmark {
 
     @Override
     @Benchmark
-    @OperationsPerInvocation(CONCURRENT_CALLS)
+    @OperationsPerInvocation(CONCURRENCY_50)
     public void concurrentApiCall(Blackhole blackhole) {
-        CountDownLatch countDownLatch = new CountDownLatch(CONCURRENT_CALLS);
-        for (int i = 0; i < CONCURRENT_CALLS; i++) {
+        CountDownLatch countDownLatch = new CountDownLatch(CONCURRENCY_50);
+        for (int i = 0; i < CONCURRENCY_50; i++) {
             countDownUponCompletion(blackhole, client.allTypes(), countDownLatch);
         }
 

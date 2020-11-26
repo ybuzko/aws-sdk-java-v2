@@ -15,6 +15,10 @@
 
 package software.amazon.awssdk.benchmark.apicall.httpclient.async;
 
+import static software.amazon.awssdk.benchmark.utils.BenchmarkConstant.CONCURRENCY_50;
+import static software.amazon.awssdk.benchmark.utils.BenchmarkConstant.CONCURRENCY_500;
+import static software.amazon.awssdk.benchmark.utils.BenchmarkConstant.CONCURRENCY_5000;
+import static software.amazon.awssdk.benchmark.utils.BenchmarkConstant.CONCURRENT_CALLS;
 import static software.amazon.awssdk.benchmark.utils.BenchmarkConstant.DEFAULT_JDK_SSL_PROVIDER;
 import static software.amazon.awssdk.benchmark.utils.BenchmarkConstant.OPEN_SSL_PROVIDER;
 import static software.amazon.awssdk.benchmark.utils.BenchmarkUtils.getSslProvider;
@@ -69,6 +73,7 @@ public class NettyHttpClientH1Benchmark extends BaseNettyBenchmark {
 
         sdkHttpClient = NettyNioAsyncHttpClient.builder()
                                                .sslProvider(sslProvider)
+                                               .maxConcurrency(CONCURRENCY_50)
                                                .buildWithDefaults(trustAllTlsAttributeMapBuilder().build());
         client = ProtocolRestJsonAsyncClient.builder()
                                             .endpointOverride(mockServer.getHttpsUri())
