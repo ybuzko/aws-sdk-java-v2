@@ -31,7 +31,7 @@ public final class BenchmarkConstant {
     public static final String DEFAULT_JDK_SSL_PROVIDER = "jdk";
     public static final String OPEN_SSL_PROVIDER = "openssl";
 
-    public static final int CONCURRENT_CALLS = 5000;
+    public static final int CONCURRENT_CALLS = 50;
 
     public static final Instant TIMESTAMP_MEMBER = LocalDateTime.now().toInstant(ZoneOffset.UTC);
 
