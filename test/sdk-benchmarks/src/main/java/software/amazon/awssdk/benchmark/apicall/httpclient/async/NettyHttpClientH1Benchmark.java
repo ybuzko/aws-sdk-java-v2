@@ -73,7 +73,7 @@ public class NettyHttpClientH1Benchmark extends BaseNettyBenchmark {
 
         sdkHttpClient = NettyNioAsyncHttpClient.builder()
                                                .sslProvider(sslProvider)
-                                               .maxConcurrency(CONCURRENCY_50)
+                                               .maxConcurrency(CONCURRENCY_500)
                                                .buildWithDefaults(trustAllTlsAttributeMapBuilder().build());
         client = ProtocolRestJsonAsyncClient.builder()
                                             .endpointOverride(mockServer.getHttpsUri())
