@@ -15,6 +15,7 @@
 
 package software.amazon.awssdk.benchmark;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static software.amazon.awssdk.benchmark.utils.BenchmarkConstant.OBJECT_MAPPER;
 import static software.amazon.awssdk.benchmark.utils.BenchmarkUtils.compare;
 
@@ -22,6 +23,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -35,6 +38,7 @@ import software.amazon.awssdk.benchmark.stats.SdkBenchmarkParams;
 import software.amazon.awssdk.benchmark.stats.SdkBenchmarkResult;
 import software.amazon.awssdk.benchmark.stats.SdkBenchmarkStatistics;
 import software.amazon.awssdk.utils.Logger;
+import software.amazon.awssdk.utils.StringInputStream;
 
 
 /**
@@ -97,7 +101,18 @@ class BenchmarkResultProcessor {
             }
         }
 
-        log.info(() -> "Current result: " + serializeResult(currentData));
+        String result = serializeResult(currentData);
+
+        log.info(() -> "Current result: " + result);
+
+        try {
+            if (result != null) {
+                Files.copy(new StringInputStream(result),
+                           Paths.get(BenchmarkResultProcessor.class.getResource("baseline.json").toURI()), REPLACE_EXISTING);
+            }
+        } catch (Exception e) {
+            log.warn(() -> "Failed to copy the result", e);
+        }
         return failedBenchmarkIds;
     }
 

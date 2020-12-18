@@ -35,7 +35,6 @@ import software.amazon.awssdk.benchmark.apicall.protocol.Ec2ProtocolBenchmark;
 import software.amazon.awssdk.benchmark.apicall.protocol.JsonProtocolBenchmark;
 import software.amazon.awssdk.benchmark.apicall.protocol.QueryProtocolBenchmark;
 import software.amazon.awssdk.benchmark.apicall.protocol.XmlProtocolBenchmark;
-import software.amazon.awssdk.benchmark.coldstart.V2DefaultClientCreationBenchmark;
 import software.amazon.awssdk.benchmark.coldstart.V2OptimizedClientCreationBenchmark;
 import software.amazon.awssdk.benchmark.enhanced.dynamodb.EnhancedClientDeleteV1MapperComparisonBenchmark;
 import software.amazon.awssdk.benchmark.enhanced.dynamodb.EnhancedClientGetOverheadBenchmark;
@@ -64,8 +63,8 @@ public class BenchmarkRunner {
         UrlConnectionHttpClientBenchmark.class.getSimpleName());
 
     private static final List<String> COLD_START_BENCHMARKS = Arrays.asList(
-        V2OptimizedClientCreationBenchmark.class.getSimpleName(),
-        V2DefaultClientCreationBenchmark.class.getSimpleName());
+        V2OptimizedClientCreationBenchmark.class.getSimpleName());
+        //V2DefaultClientCreationBenchmark.class.getSimpleName());
 
     private static final List<String> MAPPER_BENCHMARKS = Arrays.asList(
             EnhancedClientGetOverheadBenchmark.class.getSimpleName(),
@@ -92,9 +91,9 @@ public class BenchmarkRunner {
 
     public static void main(String... args) throws RunnerException, JsonProcessingException {
         List<String> benchmarksToRun = new ArrayList<>();
-        benchmarksToRun.addAll(SYNC_BENCHMARKS);
-        benchmarksToRun.addAll(ASYNC_BENCHMARKS);
-        benchmarksToRun.addAll(PROTOCOL_BENCHMARKS);
+        //benchmarksToRun.addAll(SYNC_BENCHMARKS);
+        //benchmarksToRun.addAll(ASYNC_BENCHMARKS);
+        //benchmarksToRun.addAll(PROTOCOL_BENCHMARKS);
         benchmarksToRun.addAll(COLD_START_BENCHMARKS);
 
         log.info(() -> "Skipping tests, to reduce benchmark times: \n" + MAPPER_BENCHMARKS + "\n" + METRIC_BENCHMARKS);
