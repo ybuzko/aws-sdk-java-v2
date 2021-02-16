@@ -120,8 +120,8 @@ public class AmazonHttpClientTest {
             Assert.assertSame(exception, e.getCause());
         }
 
-        // Verify that we called execute 4 times.
-        verify(mockHandler, times(4)).handle(any(), any());
+        // Verify that we called execute 3 times.
+        verify(mockHandler, times(3)).handle(any(), any());
     }
 
 

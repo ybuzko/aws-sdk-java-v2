@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.core.http.server;
+package software.amazon.awssdk.services.s3;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -274,33 +274,7 @@ public class MockServer {
     }
 
     public static class ThrottlingServerBehavior implements ServerBehaviorStrategy {
-        private final HttpResponse response;
-        private final String content;
         private final ConcurrentHashMap<Long, AtomicInteger> buckets = new ConcurrentHashMap<>();
-
-        public ThrottlingServerBehavior(HttpResponse response) {
-            this.response = response;
-            try {
-                this.content = IoUtils.toUtf8String(response.getEntity().getContent());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        public static DummyResponseServerBehavior build(int statusCode, String statusMessage, String content) {
-            HttpResponse response = new BasicHttpResponse(
-                new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), statusCode, statusMessage));
-            setEntity(response, content);
-            response.addHeader("Content-Length", String.valueOf(content.getBytes().length));
-            response.addHeader("Connection", "close");
-            return new DummyResponseServerBehavior(response);
-        }
-
-        private static void setEntity(HttpResponse response, String content) {
-            BasicHttpEntity entity = new BasicHttpEntity();
-            entity.setContent(new StringInputStream(content));
-            response.setEntity(entity);
-        }
 
         @Override
         public void runServer(ServerSocket serverSocket) {
@@ -312,13 +286,13 @@ public class MockServer {
                             second = Instant.now().getEpochSecond();
                             AtomicInteger value = buckets.computeIfAbsent(second, l -> new AtomicInteger(0));
 
-                            if (value.incrementAndGet() > 25) {
+                            if (value.incrementAndGet() > 10) {
                                 out.writeBytes("HTTP/1.1 429 Too Many Requests\r\n");
                             } else {
                                 out.writeBytes("HTTP/1.1 200 OK\r\n");
-                                out.writeBytes("Content-Type: application/json\r\n");
-                                out.writeBytes("Content-Length: 2\r\n\r\n");
-                                out.writeBytes("{}");
+                                out.writeBytes("Content-Type: application/xml\r\n");
+                                out.writeBytes("Content-Length: 7\r\n\r\n");
+                                out.writeBytes("<x></x>");
                             }
                         }
                     } catch (SocketException se) {
@@ -329,7 +303,9 @@ public class MockServer {
                     while (buckets.hasNext()) {
                         Long bucket = buckets.next();
                         if (bucket != null && bucket < second) {
+                            AtomicInteger requests = this.buckets.get(bucket);
                             buckets.remove();
+//                            System.out.println("Requests at " + bucket + ": " + requests.get());
                         }
                     }
                 }
@@ -337,6 +313,5 @@ public class MockServer {
                 throw new RuntimeException("Error when waiting for new socket connection.", e);
             }
         }
-
     }
 }
