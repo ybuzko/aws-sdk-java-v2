@@ -1,21 +1,23 @@
 package software.amazon.awssdk.services.s3.encryption;
 
-import java.util.Optional;
-import javax.crypto.SecretKey;
-
 public interface ContentKeyEncryptor {
-    Optional<String> name();
-    EncryptedSecretKey encryptKey(SecretKey key, EncryptionContext context);
-    SecretKey decryptKey(EncryptedSecretKey key, EncryptionContext context);
+    String name();
+    
+    EncryptedSecretKey encryptKey(DecryptedSecretKey key, EncryptionContext context);
+    DecryptedSecretKey decryptKey(EncryptedSecretKey key, EncryptionContext context);
 
-    public Builder builder() {
-        return null;
-    }
+    ContentKeyEncryptor RSA_OAEP_SHA1 = null;
 
-    interface Builder {
-        Builder putReadEncryptorMapping(KeyWrapAlgorithm algorithm, ContentKeyEncryptor encryptor);
-        Builder writeEncryptor(ContentKeyEncryptor encryptor);
+    ContentKeyEncryptor AES_GCM = null;
 
-        ContentKeyEncryptor build();
-    }
+    ContentKeyEncryptor KMS = null;
+
+    @Deprecated
+    ContentKeyEncryptor KMS_NO_CONTEXT = null;
+
+    @Deprecated
+    ContentKeyEncryptor AES = null;
+
+    @Deprecated
+    ContentKeyEncryptor RSA_ECB_OAEP_SHA256_MGF1_PADDING = null;
 }

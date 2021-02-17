@@ -10,11 +10,11 @@ public interface ContentKeyGenerator {
         try {
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             keyGenerator.init(256);
-            return keyGenerator.generateKey();
+            return DecryptedSecretKey.create(keyGenerator.generateKey());
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     };
 
-    SecretKey generateKey();
+    DecryptedSecretKey generateKey();
 }

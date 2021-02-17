@@ -94,7 +94,7 @@
             <artifactId>kms</artifactId>
             <groupId>software.amazon.awssdk</groupId>
             <version>${awsjavasdk.version}</version>
-            <scope>test</scope>
+<!--            <scope>test</scope>-->
         </dependency>
         <dependency>
             <artifactId>cloudwatch-metric-publisher</artifactId>
