@@ -1,11 +1,11 @@
-package software.amazon.awssdk.services.s3.encryption;
+package software.amazon.awssdk.services.s3.encryption.auth;
 
 import java.util.HashSet;
 import java.util.Set;
 import javax.crypto.SecretKey;
+import software.amazon.awssdk.services.s3.encryption.keywrap.EncryptedSecretKey;
+import software.amazon.awssdk.services.s3.encryption.keywrap.KeyWrapAlgorithm;
 import software.amazon.awssdk.services.s3.encryption.metadata.MetadataKey;
-import software.amazon.awssdk.services.s3.encryption.model.ResolveKeyRequest;
-import software.amazon.awssdk.services.s3.encryption.model.ResolveKeyResponse;
 
 public class StaticSymmetricCredentialsProvider implements EncryptionCredentialsProvider {
     private final SecretKey secretKey;
@@ -19,15 +19,15 @@ public class StaticSymmetricCredentialsProvider implements EncryptionCredentials
     }
 
     @Override
-    public Set<ContentKeyEncryptionAlgorithm> supportedContentEncryptionKeyAlgorithms() {
-        Set<ContentKeyEncryptionAlgorithm> result = new HashSet<>();
-        result.add(ContentKeyEncryptionAlgorithm.AES_GCM);
-        result.add(ContentKeyEncryptionAlgorithm.AES);
+    public Set<KeyWrapAlgorithm> supportedKeyWrapAlgorithms() {
+        Set<KeyWrapAlgorithm> result = new HashSet<>();
+        result.add(KeyWrapAlgorithm.AES_GCM);
+        result.add(KeyWrapAlgorithm.AES);
         return result;
     }
 
     @Override
-    public ResolveKeyResponse resolveContentKey(ResolveKeyRequest request) {
+    public ResolveKeyResponse resolveKey(ResolveKeyRequest request) {
         EncryptedSecretKey secretKey = request.context().metadata(MetadataKey.ENCRYPTED_SECRET_KEY);
 
         if (secretKey == null) {
@@ -38,7 +38,9 @@ public class StaticSymmetricCredentialsProvider implements EncryptionCredentials
     }
 
     private ResolveKeyResponse createNewKey(ResolveKeyRequest request) {
-        DecryptedSecretKey newKey = request.context().encryptionPolicy().contentKeyGenerator().generateKey();
+        SecretKey newKey = request.context().encryptionPolicy().keyGeneratorProvider().createKeyGenerator().generateKey();
+
+        request.algorithm();
 
         return null;
     }

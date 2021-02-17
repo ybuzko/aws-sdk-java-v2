@@ -1,7 +1,7 @@
 package software.amazon.awssdk.services.s3.encryption.metadata;
 
 import java.util.Map;
-import software.amazon.awssdk.services.s3.encryption.EncryptedSecretKey;
+import software.amazon.awssdk.services.s3.encryption.keywrap.EncryptedSecretKey;
 
 public interface MetadataKey<T> {
     MetadataKey<String> KEY_WRAP_ALGORITHM = null;

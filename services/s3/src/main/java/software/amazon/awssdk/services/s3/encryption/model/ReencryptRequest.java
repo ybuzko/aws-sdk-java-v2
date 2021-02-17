@@ -5,6 +5,9 @@ public interface ReencryptRequest {
         return null;
     }
 
+    String bucket();
+    String key();
+
     interface Builder {
         Builder bucket(String bucket);
         Builder key(String key);

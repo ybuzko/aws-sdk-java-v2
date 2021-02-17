@@ -1,9 +1,8 @@
-package software.amazon.awssdk.services.s3.encryption.model;
+package software.amazon.awssdk.services.s3.encryption.content;
 
 import java.util.Map;
-import software.amazon.awssdk.services.s3.encryption.Content;
 
-public interface EncryptContentResponse {
+public interface EncryptContentRequest {
     Content content();
     Map<String, String> metadata();
     String contentType();
@@ -18,6 +17,6 @@ public interface EncryptContentResponse {
         Builder metadata(Map<String, String> metadata);
         Builder contentType(String contentType);
         Builder contentEncoding(String contentEncoding);
-        EncryptContentResponse build();
+        EncryptContentRequest build();
     }
 }

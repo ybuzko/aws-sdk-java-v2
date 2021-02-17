@@ -1,7 +1,6 @@
-package software.amazon.awssdk.services.s3.encryption.model;
+package software.amazon.awssdk.services.s3.encryption.content;
 
 import java.util.Map;
-import software.amazon.awssdk.services.s3.encryption.Content;
 
 public interface DecryptContentRequest {
     Content content();

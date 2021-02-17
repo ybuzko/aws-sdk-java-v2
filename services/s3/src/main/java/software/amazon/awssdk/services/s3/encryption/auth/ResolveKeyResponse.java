@@ -1,11 +1,11 @@
-package software.amazon.awssdk.services.s3.encryption.model;
+package software.amazon.awssdk.services.s3.encryption.auth;
 
 import java.util.Map;
-import software.amazon.awssdk.services.s3.encryption.DecryptedSecretKey;
+import javax.crypto.SecretKey;
 import software.amazon.awssdk.services.s3.encryption.metadata.MetadataKey;
 
 public interface ResolveKeyResponse {
-    DecryptedSecretKey secretKey();
+    SecretKey secretKey();
     Map<String, String> newMetadata();
 
     static Builder builder() {
@@ -13,7 +13,7 @@ public interface ResolveKeyResponse {
     }
 
     interface Builder {
-        Builder secretKey(DecryptedSecretKey secretKey);
+        Builder secretKey(SecretKey secretKey);
         <T> Builder putNewMetadata(MetadataKey<T> key, T value);
 
         ResolveKeyResponse build();

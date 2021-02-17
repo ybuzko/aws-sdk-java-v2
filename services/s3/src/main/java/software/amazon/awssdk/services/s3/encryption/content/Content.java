@@ -1,4 +1,4 @@
-package software.amazon.awssdk.services.s3.encryption;
+package software.amazon.awssdk.services.s3.encryption.content;
 
 import java.io.InputStream;
 

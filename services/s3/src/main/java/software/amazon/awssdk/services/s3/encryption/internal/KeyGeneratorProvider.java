@@ -1,20 +1,19 @@
-package software.amazon.awssdk.services.s3.encryption;
+package software.amazon.awssdk.services.s3.encryption.internal;
 
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 
 @FunctionalInterface
-public interface ContentKeyGenerator {
-    ContentKeyGenerator AES_256 = () -> {
+public interface KeyGeneratorProvider {
+    KeyGeneratorProvider AES_256 = () -> {
         try {
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             keyGenerator.init(256);
-            return DecryptedSecretKey.create(keyGenerator.generateKey());
+            return keyGenerator;
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     };
 
-    DecryptedSecretKey generateKey();
+    KeyGenerator createKeyGenerator();
 }

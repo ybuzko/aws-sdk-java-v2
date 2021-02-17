@@ -1,9 +1,8 @@
 package software.amazon.awssdk.services.s3.encryption;
 
-import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.Set;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.encryption.auth.KmsEncryptionCredentialsProvider;
+import software.amazon.awssdk.services.s3.encryption.content.EncryptionAlgorithm;
 
 public class Examples {
     public static void main(String... args) {
@@ -54,7 +53,7 @@ public class Examples {
 
         S3EncryptedClient client =
             S3EncryptedClient.builder(EncryptionPolicy.V2020_02_16)
-                             .additionalReadCredentialsProviders(KmsEncryptionCredentialsProvider.create("old-id"))
+                             .readEncryptionCredentialsProviders(KmsEncryptionCredentialsProvider.create("old-id"))
                              .encryptionCredentialsProvider(KmsEncryptionCredentialsProvider.create("new-id"))
                              .build();
 
@@ -69,7 +68,7 @@ public class Examples {
         // Migrate unencrypted objects from the normal client to the encryption client
 
         EncryptionPolicy allowReadUnecryptedObjectsPolicy =
-            EncryptionPolicy.V2020_02_16.copy(r -> r.addAllowedContentEncryptionAlgorithm(ContentEncryptionAlgorithm.NOT_ENCRYPTED));
+            EncryptionPolicy.V2020_02_16.copy(r -> r.addAllowedContentEncryptionAlgorithm(EncryptionAlgorithm.NOT_ENCRYPTED));
 
         S3EncryptedClient client =
             S3EncryptedClient.builder(allowReadUnecryptedObjectsPolicy)
@@ -87,7 +86,7 @@ public class Examples {
         // Migrate encrypted objects from the encryption client to the normal client
 
         EncryptionPolicy writeUnencryptedPolicy =
-            EncryptionPolicy.V2020_02_16.copy(r -> r.preferredContentEncryptionAlgorithm(ContentEncryptionAlgorithm.NOT_ENCRYPTED));
+            EncryptionPolicy.V2020_02_16.copy(r -> r.preferredContentEncryptionAlgorithm(EncryptionAlgorithm.NOT_ENCRYPTED));
 
         S3EncryptedClient client =
             S3EncryptedClient.builder(writeUnencryptedPolicy)
@@ -106,7 +105,7 @@ public class Examples {
         TransferManager transferManager =
             TransferManager.builder()
                            .encryptionRuntime(S3EncryptionRuntime.builder(EncryptionPolicy.V2020_02_16)
-                                                                 .additionalReadCredentialsProviders(KmsEncryptionCredentialsProvider.create("old-id"))
+                                                                 .readEncryptionCredentialsProviders(KmsEncryptionCredentialsProvider.create("old-id"))
                                                                  .encryptionCredentialsProvider(KmsEncryptionCredentialsProvider.create("new-id"))
                                                                  .build())
                            .build();

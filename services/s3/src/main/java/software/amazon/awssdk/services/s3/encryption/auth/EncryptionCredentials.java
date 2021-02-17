@@ -1,11 +1,13 @@
-package software.amazon.awssdk.services.s3.encryption;
+package software.amazon.awssdk.services.s3.encryption.auth;
 
 import java.security.KeyPair;
 import java.util.Optional;
 import javax.crypto.SecretKey;
+import software.amazon.awssdk.services.s3.encryption.keywrap.EncryptedSecretKey;
+import software.amazon.awssdk.services.s3.encryption.keywrap.KeyWrapAlgorithm;
 
 public interface EncryptionCredentials {
-    Optional<EncryptedSecretKey> encryptWithAlgorithm(ContentKeyEncryptionAlgorithm algorithm);
+    Optional<EncryptedSecretKey> encryptWithAlgorithm(KeyWrapAlgorithm algorithm);
 
     static Builder builder() {
         return null;

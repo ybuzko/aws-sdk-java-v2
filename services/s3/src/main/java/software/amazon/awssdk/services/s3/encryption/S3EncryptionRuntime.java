@@ -1,10 +1,11 @@
 package software.amazon.awssdk.services.s3.encryption;
 
 import java.util.Collection;
-import software.amazon.awssdk.services.s3.encryption.model.DecryptContentRequest;
-import software.amazon.awssdk.services.s3.encryption.model.DecryptContentResponse;
-import software.amazon.awssdk.services.s3.encryption.model.EncryptContentRequest;
-import software.amazon.awssdk.services.s3.encryption.model.EncryptContentResponse;
+import software.amazon.awssdk.services.s3.encryption.auth.EncryptionCredentialsProvider;
+import software.amazon.awssdk.services.s3.encryption.content.DecryptContentRequest;
+import software.amazon.awssdk.services.s3.encryption.content.DecryptContentResponse;
+import software.amazon.awssdk.services.s3.encryption.content.EncryptContentRequest;
+import software.amazon.awssdk.services.s3.encryption.content.EncryptContentResponse;
 
 public interface S3EncryptionRuntime {
     DecryptContentResponse decryptContent(DecryptContentRequest request);
@@ -15,8 +16,8 @@ public interface S3EncryptionRuntime {
     }
 
     interface Builder {
-        Builder additionalReadCredentialsProviders(EncryptionCredentialsProvider... additionalReadCredentialsProviders);
-        Builder additionalReadCredentialsProviders(Collection<EncryptionCredentialsProvider> additionalReadCredentialsProviders);
+        Builder readEncryptionCredentialsProviders(EncryptionCredentialsProvider... additionalReadCredentialsProviders);
+        Builder readEncryptionCredentialsProviders(Collection<EncryptionCredentialsProvider> additionalReadCredentialsProviders);
         Builder encryptionCredentialsProvider(EncryptionCredentialsProvider readWriteCredentialsProvider);
         S3EncryptionRuntime build();
     }

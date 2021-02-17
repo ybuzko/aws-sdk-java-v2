@@ -4,28 +4,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import software.amazon.awssdk.services.s3.encryption.Content;
-import software.amazon.awssdk.services.s3.encryption.ContentEncryptor;
-import software.amazon.awssdk.services.s3.encryption.ContentKeyEncryptionAlgorithm;
-import software.amazon.awssdk.services.s3.encryption.ContentKeyGenerator;
+import javax.crypto.SecretKey;
+import software.amazon.awssdk.services.s3.encryption.auth.ResolveKeyRequest;
+import software.amazon.awssdk.services.s3.encryption.content.Content;
+import software.amazon.awssdk.services.s3.encryption.content.ContentEncryptor;
 import software.amazon.awssdk.services.s3.encryption.EncryptionContext;
-import software.amazon.awssdk.services.s3.encryption.EncryptionCredentialsProvider;
+import software.amazon.awssdk.services.s3.encryption.auth.EncryptionCredentialsProvider;
 import software.amazon.awssdk.services.s3.encryption.EncryptionPolicy;
+import software.amazon.awssdk.services.s3.encryption.keywrap.DecryptKeyResponse;
+import software.amazon.awssdk.services.s3.encryption.keywrap.EncryptKeyResponse;
+import software.amazon.awssdk.services.s3.encryption.keywrap.EncryptedSecretKey;
+import software.amazon.awssdk.services.s3.encryption.keywrap.KeyEncryptor;
+import software.amazon.awssdk.services.s3.encryption.keywrap.KeyWrapAlgorithm;
 import software.amazon.awssdk.services.s3.encryption.S3EncryptionRuntime;
 import software.amazon.awssdk.services.s3.encryption.metadata.MetadataKey;
-import software.amazon.awssdk.services.s3.encryption.model.DecryptContentRequest;
-import software.amazon.awssdk.services.s3.encryption.model.DecryptContentResponse;
-import software.amazon.awssdk.services.s3.encryption.model.EncryptContentRequest;
-import software.amazon.awssdk.services.s3.encryption.model.EncryptContentResponse;
-import software.amazon.awssdk.services.s3.encryption.model.ResolveKeyResponse;
+import software.amazon.awssdk.services.s3.encryption.content.DecryptContentRequest;
+import software.amazon.awssdk.services.s3.encryption.content.DecryptContentResponse;
+import software.amazon.awssdk.services.s3.encryption.content.EncryptContentRequest;
+import software.amazon.awssdk.services.s3.encryption.content.EncryptContentResponse;
+import software.amazon.awssdk.services.s3.encryption.auth.ResolveKeyResponse;
 
 public class DefaultS3EncryptionRuntime implements S3EncryptionRuntime {
-    private final ContentKeyGenerator contentKeyGenerator;
+    private final KeyGeneratorProvider contentKeyGenerator;
     private final EncryptionPolicy encryptionPolicy;
     private final List<EncryptionCredentialsProvider> additionalReadCredentialsProviders;
     private final EncryptionCredentialsProvider readWriteCredentialsProvider;
     private final ContentEncryptor encryptor;
-    private final ContentKeyEncryptionAlgorithm keyEncryptionAlgorithm;
+    private final KeyWrapAlgorithm keyWrapAlgorithm;
 
     public DefaultS3EncryptionRuntime() {
         this.contentKeyGenerator = null;
@@ -34,34 +39,35 @@ public class DefaultS3EncryptionRuntime implements S3EncryptionRuntime {
         this.readWriteCredentialsProvider = null;
 
         this.encryptor = encryptionPolicy.preferredContentEncryptionAlgorithm().createContentEncryptor();
-        this.keyEncryptionAlgorithm = keyEncryptionAlgorithm();
+        this.keyWrapAlgorithm = keyEncryptionAlgorithm();
     }
 
-    private ContentKeyEncryptionAlgorithm keyEncryptionAlgorithm() {
-        Set<ContentKeyEncryptionAlgorithm> supportedAlgorithms =
-            readWriteCredentialsProvider.supportedContentEncryptionKeyAlgorithms();
-        List<ContentKeyEncryptionAlgorithm> preferredAlgorithms =
+    private KeyWrapAlgorithm keyEncryptionAlgorithm() {
+        Set<KeyWrapAlgorithm> supportedAlgorithms =
+            readWriteCredentialsProvider.supportedKeyWrapAlgorithms();
+        List<KeyWrapAlgorithm> preferredAlgorithms =
             encryptionPolicy.preferredKeyEncryptionAlgorithms();
 
-        for (ContentKeyEncryptionAlgorithm algorithm : preferredAlgorithms) {
+        for (KeyWrapAlgorithm algorithm : preferredAlgorithms) {
             if (supportedAlgorithms.contains(algorithm)) {
                 return algorithm;
             }
         }
 
         throw new IllegalStateException("No preferred key encryption algorithm (" + preferredAlgorithms + ") is included in the "
-                                        + "set supported by the credentials provider (" + supportedAlgorithms + ").")
+                                        + "set supported by the credentials provider (" + supportedAlgorithms + ").");
     }
 
     @Override
     public DecryptContentResponse decryptContent(DecryptContentRequest request) {
         EncryptionContext context = createContext(c -> c.metadata(request.metadata()));
 
-        EncryptionCredentialsProvider credentialsProvider = getReadCredentialsProvider(request.metadata());
-
         ResolveKeyResponse contentKeyResponse =
-            credentialsProvider.resolveContentKey(r -> r.context(context)
-                                                        .algorithm(keyEncryptionAlgorithm));
+            resolveKey(ResolveKeyRequest.builder()
+                                        .context(context)
+                                        .algorithm(keyWrapAlgorithm)
+                                        .credentialsProvider(getReadCredentialsProvider(request.metadata()))
+                                        .build());
 
         context.copy(c -> c.contentEncryptionKey(contentKeyResponse.secretKey()));
 
@@ -74,35 +80,16 @@ public class DefaultS3EncryptionRuntime implements S3EncryptionRuntime {
                                      .build();
     }
 
-    private EncryptionCredentialsProvider getReadCredentialsProvider(Map<String, String> metadata) {
-        String keyWrapAlgorithm = MetadataKey.KEY_WRAP_ALGORITHM.read(metadata);
-
-        for (EncryptionCredentialsProvider provider : additionalReadCredentialsProviders) {
-            if (provider.supportedContentEncryptionKeyAlgorithms()
-                        .stream()
-                        .map(ContentKeyEncryptionAlgorithm::name)
-                        .anyMatch(keyWrapAlgorithm::equals)) {
-                return provider;
-            }
-        }
-
-        if (readWriteCredentialsProvider.supportedContentEncryptionKeyAlgorithms()
-                                        .stream()
-                                        .map(ContentKeyEncryptionAlgorithm::name)
-                                        .anyMatch(keyWrapAlgorithm::equals)) {
-            return readWriteCredentialsProvider;
-        }
-
-        throw new IllegalStateException("No matching credentials for key wrap algorithm: " + keyWrapAlgorithm);
-    }
-
     @Override
     public EncryptContentResponse encryptContent(EncryptContentRequest request) {
         EncryptionContext context = createContext(c -> c.metadata(request.metadata()));
 
         ResolveKeyResponse contentKeyResponse =
-            readWriteCredentialsProvider.resolveContentKey(r -> r.context(context)
-                                                                 .algorithm(keyEncryptionAlgorithm));
+            resolveKey(ResolveKeyRequest.builder()
+                                        .context(context)
+                                        .algorithm(keyWrapAlgorithm)
+                                        .credentialsProvider(readWriteCredentialsProvider)
+                                        .build());
 
         context.copy(c -> {
             c.contentEncryptionKey(contentKeyResponse.secretKey());
@@ -117,6 +104,65 @@ public class DefaultS3EncryptionRuntime implements S3EncryptionRuntime {
                                      .contentType("application/octet-stream")
                                      .contentEncoding(null) // TODO : What encoding is appropriate?
                                      .build();
+    }
+
+    private EncryptionCredentialsProvider getReadCredentialsProvider(Map<String, String> metadata) {
+        String keyWrapAlgorithm = MetadataKey.KEY_WRAP_ALGORITHM.read(metadata);
+
+        for (EncryptionCredentialsProvider provider : additionalReadCredentialsProviders) {
+            if (provider.supportedKeyWrapAlgorithms()
+                        .stream()
+                        .map(KeyWrapAlgorithm::name)
+                        .anyMatch(keyWrapAlgorithm::equals)) {
+                return provider;
+            }
+        }
+
+        if (readWriteCredentialsProvider.supportedKeyWrapAlgorithms()
+                                        .stream()
+                                        .map(KeyWrapAlgorithm::name)
+                                        .anyMatch(keyWrapAlgorithm::equals)) {
+            return readWriteCredentialsProvider;
+        }
+
+        throw new IllegalStateException("No matching credentials for key wrap algorithm: " + keyWrapAlgorithm);
+    }
+
+    private ResolveKeyResponse resolveKey(ResolveKeyRequest request) {
+        EncryptedSecretKey encryptedKey = request.context().metadata(MetadataKey.ENCRYPTED_SECRET_KEY);
+
+        if (encryptedKey == null) {
+            // TODO: Why indirection? Why not credentials decrypt/encrypt?
+            return createNewKey(request);
+        }
+
+        return decryptKey(request, encryptedKey);
+    }
+
+    private ResolveKeyResponse createNewKey(ResolveKeyRequest request) {
+        SecretKey newKey = encryptionPolicy.keyGeneratorProvider().createKeyGenerator().generateKey();
+        KeyEncryptor keyEncryptor = request.credentialsProvider().createKeyEncryptor(request.algorithm());
+        EncryptKeyResponse encryptResponse = keyEncryptor.encryptKey(r -> r.key(newKey).context(request.context()));
+
+
+        return ResolveKeyResponse.builder()
+                                 .secretKey(newKey)
+                                 .putNewMetadata(MetadataKey.ENCRYPTED_SECRET_KEY, encryptResponse.key())
+                                 .putNewMetadata(MetadataKey.KEY_ALGORITHM, newKey.getAlgorithm())
+                                 .putNewMetadata(MetadataKey.KEY_WRAP_ALGORITHM, request.algorithm().name())
+                                 .build();
+    }
+
+    private ResolveKeyResponse decryptKey(ResolveKeyRequest request, EncryptedSecretKey encryptedKey) {
+        KeyEncryptor keyEncryptor = request.credentialsProvider().createKeyEncryptor(request.algorithm());
+        DecryptKeyResponse decryptResponse = keyEncryptor.decryptKey(r -> r.key(encryptedKey));
+
+        return ResolveKeyResponse.builder()
+                                 .secretKey(decryptResponse.key())
+                                 .putNewMetadata(MetadataKey.ENCRYPTED_SECRET_KEY, encryptedKey)
+                                 .putNewMetadata(MetadataKey.KEY_ALGORITHM, encryptedKey.keyAlgorithm())
+                                 .putNewMetadata(MetadataKey.KEY_WRAP_ALGORITHM, request.algorithm().name())
+                                 .build();
     }
 
     private EncryptionContext createContext(Consumer<EncryptionContext.Builder> consumer) {

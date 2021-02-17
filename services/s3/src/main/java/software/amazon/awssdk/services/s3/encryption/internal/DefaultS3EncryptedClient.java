@@ -3,18 +3,19 @@ package software.amazon.awssdk.services.s3.encryption.internal;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseTransformer;
 import software.amazon.awssdk.http.AbortableInputStream;
 import software.amazon.awssdk.http.ContentStreamProvider;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.encryption.Content;
+import software.amazon.awssdk.services.s3.encryption.content.Content;
 import software.amazon.awssdk.services.s3.encryption.S3EncryptedClient;
 import software.amazon.awssdk.services.s3.encryption.S3EncryptionRuntime;
-import software.amazon.awssdk.services.s3.encryption.model.DecryptContentRequest;
-import software.amazon.awssdk.services.s3.encryption.model.DecryptContentResponse;
-import software.amazon.awssdk.services.s3.encryption.model.EncryptContentRequest;
-import software.amazon.awssdk.services.s3.encryption.model.EncryptContentResponse;
+import software.amazon.awssdk.services.s3.encryption.content.DecryptContentRequest;
+import software.amazon.awssdk.services.s3.encryption.content.DecryptContentResponse;
+import software.amazon.awssdk.services.s3.encryption.content.EncryptContentRequest;
+import software.amazon.awssdk.services.s3.encryption.content.EncryptContentResponse;
 import software.amazon.awssdk.services.s3.encryption.model.ReencryptResponse;
 import software.amazon.awssdk.services.s3.encryption.model.ReencryptRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -86,7 +87,10 @@ public class DefaultS3EncryptedClient implements S3EncryptedClient {
 
     @Override
     public ReencryptResponse reencryptObject(ReencryptRequest request) {
-        return null; // TODO
+        ResponseInputStream<GetObjectResponse> getResult = getObject(r -> r.bucket(request.bucket()).key(request.key()));
+
+        RequestBody requestBody = RequestBody.fromInputStream(getResult, getResult.response().contentLength());
+        delegate.putObject(r -> r.bucket(request.bucket()).key(request.key()), requestBody;
     }
 
     @Override

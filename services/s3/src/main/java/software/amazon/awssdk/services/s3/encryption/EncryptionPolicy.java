@@ -3,58 +3,60 @@ package software.amazon.awssdk.services.s3.encryption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import software.amazon.awssdk.core.SdkRequest;
+import software.amazon.awssdk.services.s3.encryption.content.EncryptionAlgorithm;
+import software.amazon.awssdk.services.s3.encryption.internal.KeyGeneratorProvider;
+import software.amazon.awssdk.services.s3.encryption.keywrap.KeyWrapAlgorithm;
 import software.amazon.awssdk.utils.builder.CopyableBuilder;
 import software.amazon.awssdk.utils.builder.ToCopyableBuilder;
 
 public interface EncryptionPolicy extends ToCopyableBuilder<EncryptionPolicy.Builder, EncryptionPolicy> {
     @Deprecated
     EncryptionPolicy LEGACY =
-        builder().allowedKeyEncryptionAlgorithms(ContentKeyEncryptionAlgorithm.AES_GCM,
-                                                 ContentKeyEncryptionAlgorithm.KMS,
-                                                 ContentKeyEncryptionAlgorithm.RSA_OAEP_SHA1,
-                                                 ContentKeyEncryptionAlgorithm.KMS_NO_CONTEXT,
-                                                 ContentKeyEncryptionAlgorithm.AES,
-                                                 ContentKeyEncryptionAlgorithm.RSA_ECB_OAEP_SHA256_MGF1_PADDING)
-                 .preferredKeyEncryptionAlgorithms(ContentKeyEncryptionAlgorithm.KMS,
-                                                   ContentKeyEncryptionAlgorithm.AES_GCM,
-                                                   ContentKeyEncryptionAlgorithm.RSA_OAEP_SHA1)
-                 .allowedContentEncryptionAlgorithms(ContentEncryptionAlgorithm.AES_CBC,
-                                                     ContentEncryptionAlgorithm.AES_GCM,
-                                                     ContentEncryptionAlgorithm.AES_CTR)
-                 .preferredContentEncryptionAlgorithm(ContentEncryptionAlgorithm.AES_GCM)
-                 .contentKeyGenerator(ContentKeyGenerator.AES_256)
+        builder().allowedKeyEncryptionAlgorithms(KeyWrapAlgorithm.AES_GCM,
+                                                 KeyWrapAlgorithm.KMS,
+                                                 KeyWrapAlgorithm.RSA_OAEP_SHA1,
+                                                 KeyWrapAlgorithm.KMS_NO_CONTEXT,
+                                                 KeyWrapAlgorithm.AES,
+                                                 KeyWrapAlgorithm.RSA_ECB_OAEP_SHA256_MGF1_PADDING)
+                 .preferredKeyEncryptionAlgorithms(KeyWrapAlgorithm.KMS,
+                                                   KeyWrapAlgorithm.AES_GCM,
+                                                   KeyWrapAlgorithm.RSA_OAEP_SHA1)
+                 .allowedContentEncryptionAlgorithms(EncryptionAlgorithm.AES_CBC,
+                                                     EncryptionAlgorithm.AES_GCM,
+                                                     EncryptionAlgorithm.AES_CTR)
+                 .preferredContentEncryptionAlgorithm(EncryptionAlgorithm.AES_GCM)
+                 .contentKeyGenerator(KeyGeneratorProvider.AES_256)
                  .build();
 
     EncryptionPolicy V2020_02_16 =
-        builder().allowedKeyEncryptionAlgorithms(ContentKeyEncryptionAlgorithm.AES_GCM,
-                                                 ContentKeyEncryptionAlgorithm.KMS,
-                                                 ContentKeyEncryptionAlgorithm.RSA_OAEP_SHA1)
-                 .preferredKeyEncryptionAlgorithms(ContentKeyEncryptionAlgorithm.KMS,
-                                                   ContentKeyEncryptionAlgorithm.AES_GCM,
-                                                   ContentKeyEncryptionAlgorithm.RSA_OAEP_SHA1)
-                 .allowedContentEncryptionAlgorithms(ContentEncryptionAlgorithm.AES_GCM,
-                                                     ContentEncryptionAlgorithm.AES_CBC)
-                 .preferredContentEncryptionAlgorithm(ContentEncryptionAlgorithm.AES_GCM)
-                 .contentKeyGenerator(ContentKeyGenerator.AES_256)
+        builder().allowedKeyEncryptionAlgorithms(KeyWrapAlgorithm.AES_GCM,
+                                                 KeyWrapAlgorithm.KMS,
+                                                 KeyWrapAlgorithm.RSA_OAEP_SHA1)
+                 .preferredKeyEncryptionAlgorithms(KeyWrapAlgorithm.KMS,
+                                                   KeyWrapAlgorithm.AES_GCM,
+                                                   KeyWrapAlgorithm.RSA_OAEP_SHA1)
+                 .allowedContentEncryptionAlgorithms(EncryptionAlgorithm.AES_GCM,
+                                                     EncryptionAlgorithm.AES_CBC)
+                 .preferredContentEncryptionAlgorithm(EncryptionAlgorithm.AES_GCM)
+                 .contentKeyGenerator(KeyGeneratorProvider.AES_256)
                  .build();
 
-    List<ContentKeyEncryptionAlgorithm> allowedKeyEncryptionAlgorithms();
-    List<ContentKeyEncryptionAlgorithm> preferredKeyEncryptionAlgorithms();
-    List<ContentEncryptionAlgorithm> allowedContentEncryptionAlgorithms();
-    ContentEncryptionAlgorithm preferredContentEncryptionAlgorithm();
-    ContentKeyGenerator contentKeyGenerator();
+    List<KeyWrapAlgorithm> allowedKeyEncryptionAlgorithms();
+    List<KeyWrapAlgorithm> preferredKeyEncryptionAlgorithms();
+    List<EncryptionAlgorithm> allowedContentEncryptionAlgorithms();
+    EncryptionAlgorithm preferredContentEncryptionAlgorithm();
+    KeyGeneratorProvider keyGeneratorProvider();
 
     static Builder builder() {
         return null;
     }
 
     static EncryptionPolicy migratingBetween(EncryptionPolicy from, EncryptionPolicy to) {
-        List<ContentKeyEncryptionAlgorithm> allowedKeyAlgorithms = new ArrayList<>();
+        List<KeyWrapAlgorithm> allowedKeyAlgorithms = new ArrayList<>();
         allowedKeyAlgorithms.addAll(from.allowedKeyEncryptionAlgorithms());
         allowedKeyAlgorithms.addAll(to.allowedKeyEncryptionAlgorithms());
 
-        List<ContentEncryptionAlgorithm> allowedContentAlgorithms = new ArrayList<>();
+        List<EncryptionAlgorithm> allowedContentAlgorithms = new ArrayList<>();
         allowedContentAlgorithms.addAll(from.allowedContentEncryptionAlgorithms());
         allowedContentAlgorithms.addAll(to.allowedContentEncryptionAlgorithms());
 
@@ -63,29 +65,29 @@ public interface EncryptionPolicy extends ToCopyableBuilder<EncryptionPolicy.Bui
                                .allowedContentEncryptionAlgorithms(allowedContentAlgorithms)
                                .preferredKeyEncryptionAlgorithms(to.preferredKeyEncryptionAlgorithms())
                                .preferredContentEncryptionAlgorithm(to.preferredContentEncryptionAlgorithm())
-                               .contentKeyGenerator(to.contentKeyGenerator())
+                               .contentKeyGenerator(to.keyGeneratorProvider())
                                .build();
     }
 
     interface Builder extends CopyableBuilder<Builder, EncryptionPolicy> {
-        Builder allowedKeyEncryptionAlgorithms(ContentKeyEncryptionAlgorithm... allowedKeyEncryptionAlgorithms);
-        Builder allowedKeyEncryptionAlgorithms(Collection<ContentKeyEncryptionAlgorithm> allowedKeyEncryptionAlgorithms);
-        Builder addAllowedKeyEncryptionAlgorithm(ContentKeyEncryptionAlgorithm allowedKeyEncryptionAlgorithm);
+        Builder allowedKeyEncryptionAlgorithms(KeyWrapAlgorithm... allowedKeyWrapAlgorithms);
+        Builder allowedKeyEncryptionAlgorithms(Collection<KeyWrapAlgorithm> allowedKeyWrapAlgorithms);
+        Builder addAllowedKeyEncryptionAlgorithm(KeyWrapAlgorithm allowedKeyWrapAlgorithm);
         Builder clearAllowedKeyEncryptionAlgorithms();
 
-        Builder preferredKeyEncryptionAlgorithms(ContentKeyEncryptionAlgorithm... preferredKeyEncryptionAlgorithms);
-        Builder preferredKeyEncryptionAlgorithms(Collection<ContentKeyEncryptionAlgorithm> preferredKeyEncryptionAlgorithms);
-        Builder addPreferredKeyEncryptionAlgorithm(ContentKeyEncryptionAlgorithm preferredKeyEncryptionAlgorithm);
+        Builder preferredKeyEncryptionAlgorithms(KeyWrapAlgorithm... preferredKeyWrapAlgorithms);
+        Builder preferredKeyEncryptionAlgorithms(Collection<KeyWrapAlgorithm> preferredKeyWrapAlgorithms);
+        Builder addPreferredKeyEncryptionAlgorithm(KeyWrapAlgorithm preferredKeyWrapAlgorithm);
         Builder clearPreferredKeyEncryptionAlgorithms();
 
-        Builder allowedContentEncryptionAlgorithms(ContentEncryptionAlgorithm... readContentEncryptionAlgorithms);
-        Builder allowedContentEncryptionAlgorithms(Collection<ContentEncryptionAlgorithm> readContentEncryptionAlgorithms);
-        Builder addAllowedContentEncryptionAlgorithm(ContentEncryptionAlgorithm readContentEncryptionAlgorithm);
+        Builder allowedContentEncryptionAlgorithms(EncryptionAlgorithm... readEncryptionAlgorithms);
+        Builder allowedContentEncryptionAlgorithms(Collection<EncryptionAlgorithm> readEncryptionAlgorithms);
+        Builder addAllowedContentEncryptionAlgorithm(EncryptionAlgorithm readEncryptionAlgorithm);
         Builder clearAllowedContentEncryptionAlgorithms();
 
-        Builder preferredContentEncryptionAlgorithm(ContentEncryptionAlgorithm preferredContentEncryptionAlgorithm);
+        Builder preferredContentEncryptionAlgorithm(EncryptionAlgorithm preferredEncryptionAlgorithm);
 
-        Builder contentKeyGenerator(ContentKeyGenerator contentKeyGenerator);
+        Builder contentKeyGenerator(KeyGeneratorProvider keyGeneratorSupplier);
 
         EncryptionPolicy build();
 
