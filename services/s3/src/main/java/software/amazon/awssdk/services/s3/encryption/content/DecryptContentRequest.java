@@ -1,18 +1,18 @@
 package software.amazon.awssdk.services.s3.encryption.content;
 
-import java.util.Map;
+import software.amazon.awssdk.services.s3.encryption.EncryptionContext;
 
 public interface DecryptContentRequest {
-    Content content();
-    Map<String, String> metadata();
+    Content ciphertext();
+    EncryptionContext context();
 
     static Builder builder() {
         return null;
     }
 
     interface Builder {
-        Builder content(Content content);
-        Builder metadata(Map<String, String> metadata);
+        Builder ciphertext(Content content);
+        Builder context(EncryptionContext context);
         DecryptContentRequest build();
     }
 }

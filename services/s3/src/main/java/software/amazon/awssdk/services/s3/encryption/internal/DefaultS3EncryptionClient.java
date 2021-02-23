@@ -9,25 +9,25 @@ import software.amazon.awssdk.core.sync.ResponseTransformer;
 import software.amazon.awssdk.http.AbortableInputStream;
 import software.amazon.awssdk.http.ContentStreamProvider;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.encryption.content.Content;
-import software.amazon.awssdk.services.s3.encryption.S3EncryptedClient;
+import software.amazon.awssdk.services.s3.encryption.S3EncryptionClient;
 import software.amazon.awssdk.services.s3.encryption.S3EncryptionRuntime;
-import software.amazon.awssdk.services.s3.encryption.content.DecryptContentRequest;
-import software.amazon.awssdk.services.s3.encryption.content.DecryptContentResponse;
-import software.amazon.awssdk.services.s3.encryption.content.EncryptContentRequest;
-import software.amazon.awssdk.services.s3.encryption.content.EncryptContentResponse;
-import software.amazon.awssdk.services.s3.encryption.model.ReencryptResponse;
+import software.amazon.awssdk.services.s3.encryption.content.Content;
+import software.amazon.awssdk.services.s3.encryption.content.DecryptObjectRequest;
+import software.amazon.awssdk.services.s3.encryption.content.DecryptObjectResponse;
+import software.amazon.awssdk.services.s3.encryption.content.EncryptObjectRequest;
+import software.amazon.awssdk.services.s3.encryption.content.EncryptObjectResponse;
 import software.amazon.awssdk.services.s3.encryption.model.ReencryptRequest;
+import software.amazon.awssdk.services.s3.encryption.model.ReencryptResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
-public class DefaultS3EncryptedClient implements S3EncryptedClient {
+public class DefaultS3EncryptionClient implements S3EncryptionClient {
     private final S3Client delegate;
     private final S3EncryptionRuntime runtime;
 
-    public DefaultS3EncryptedClient(S3Client delegate, S3EncryptionRuntime runtime) {
+    public DefaultS3EncryptionClient(S3Client delegate, S3EncryptionRuntime runtime) {
         this.delegate = delegate;
         this.runtime = runtime;
     }
@@ -49,19 +49,19 @@ public class DefaultS3EncryptedClient implements S3EncryptedClient {
         // TODO: Do we need to transform this request at all before sending it?
 
         return delegate.getObject(getObjectRequest, (getObjectResponse, encryptedStream) -> {
-            DecryptContentResponse decryptResponse =
-                runtime.decryptContent(DecryptContentRequest.builder()
-                                                            .content(Content.create(encryptedStream, getObjectResponse.contentLength()))
-                                                            .metadata(getObjectResponse.metadata())
-                                                            .build());
+            DecryptObjectResponse decryptResponse =
+                runtime.decryptObject(DecryptObjectRequest.builder()
+                                                          .ciphertext(Content.create(encryptedStream, getObjectResponse.contentLength()))
+                                                          .metadata(getObjectResponse.metadata())
+                                                          .build());
 
             GetObjectResponse decryptedGetObjectResponse =
-                getObjectResponse.copy(r -> r.contentLength(decryptResponse.content().contentLength())
+                getObjectResponse.copy(r -> r.contentLength(decryptResponse.plaintext().contentLength())
                                              .contentType(decryptResponse.contentType())
                                              .contentEncoding(decryptResponse.contentEncoding()));
 
             return responseTransformer.transform(decryptedGetObjectResponse,
-                                                 AbortableInputStream.create(decryptResponse.content().inputStream(),
+                                                 AbortableInputStream.create(decryptResponse.plaintext().inputStream(),
                                                                              encryptedStream));
         });
     }
@@ -74,7 +74,7 @@ public class DefaultS3EncryptedClient implements S3EncryptedClient {
 
         PutObjectRequest encryptedPutObjectRequest =
             putObjectRequest.copy(r -> r.metadata(provider.initialEncryptResponse.metadata())
-                                        .contentLength(provider.initialEncryptResponse.content().contentLength())
+                                        .contentLength(provider.initialEncryptResponse.ciphertext().contentLength())
                                         .contentType(provider.initialEncryptResponse.contentType())
                                         .contentEncoding(provider.initialEncryptResponse.contentEncoding()));
 
@@ -90,7 +90,9 @@ public class DefaultS3EncryptedClient implements S3EncryptedClient {
         ResponseInputStream<GetObjectResponse> getResult = getObject(r -> r.bucket(request.bucket()).key(request.key()));
 
         RequestBody requestBody = RequestBody.fromInputStream(getResult, getResult.response().contentLength());
-        delegate.putObject(r -> r.bucket(request.bucket()).key(request.key()), requestBody;
+        delegate.putObject(r -> r.bucket(request.bucket()).key(request.key()), requestBody);
+
+        return ReencryptResponse.builder().build();
     }
 
     @Override
@@ -101,7 +103,7 @@ public class DefaultS3EncryptedClient implements S3EncryptedClient {
     private class EncryptedContentStreamProvider implements ContentStreamProvider {
         private final AtomicInteger attempt = new AtomicInteger(0);
 
-        private final EncryptContentResponse initialEncryptResponse;
+        private final EncryptObjectResponse initialEncryptResponse;
         private final PutObjectRequest putObjectRequest;
         private final RequestBody requestBody;
 
@@ -115,22 +117,23 @@ public class DefaultS3EncryptedClient implements S3EncryptedClient {
         @Override
         public InputStream newStream() {
             if (attempt.getAndIncrement() == 0) {
-                return initialEncryptResponse.content().inputStream();
+                return initialEncryptResponse.ciphertext().inputStream();
             } else {
-                return createNewEncryptResponse().content().inputStream();
+                return createNewEncryptResponse().ciphertext().inputStream();
             }
         }
 
-        private EncryptContentResponse createNewEncryptResponse() {
+        private EncryptObjectResponse createNewEncryptResponse() {
             ContentStreamProvider contentStreamProvider = requestBody.contentStreamProvider();
             InputStream firstInputStream = contentStreamProvider.newStream();
 
-            return runtime.encryptContent(EncryptContentRequest.builder()
-                                                               .content(Content.create(firstInputStream, putObjectRequest.contentLength()))
-                                                               .metadata(putObjectRequest.metadata())
-                                                               .contentType(putObjectRequest.contentType())
-                                                               .contentEncoding(putObjectRequest.contentEncoding())
-                                                               .build());
+            return runtime.encryptObject(EncryptObjectRequest.builder()
+                                                             .plaintext(Content.create(firstInputStream,
+                                                                                       putObjectRequest.contentLength()))
+                                                             .metadata(putObjectRequest.metadata())
+                                                             .contentType(putObjectRequest.contentType())
+                                                             .contentEncoding(putObjectRequest.contentEncoding())
+                                                             .build());
         }
     }
 }

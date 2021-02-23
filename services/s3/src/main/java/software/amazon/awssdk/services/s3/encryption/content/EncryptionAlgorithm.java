@@ -10,6 +10,5 @@ public interface EncryptionAlgorithm {
     @Deprecated
     EncryptionAlgorithm NOT_ENCRYPTED = null;
 
-    String name();
     ContentEncryptor createContentEncryptor();
 }

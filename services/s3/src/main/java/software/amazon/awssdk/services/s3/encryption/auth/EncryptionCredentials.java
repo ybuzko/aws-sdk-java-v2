@@ -1,21 +1,31 @@
 package software.amazon.awssdk.services.s3.encryption.auth;
 
-import java.security.KeyPair;
-import java.util.Optional;
-import javax.crypto.SecretKey;
-import software.amazon.awssdk.services.s3.encryption.keywrap.EncryptedSecretKey;
+import java.util.Set;
+import java.util.function.Consumer;
+import software.amazon.awssdk.services.s3.encryption.keywrap.DecryptKeyRequest;
+import software.amazon.awssdk.services.s3.encryption.keywrap.DecryptKeyResponse;
+import software.amazon.awssdk.services.s3.encryption.keywrap.EncryptKeyRequest;
+import software.amazon.awssdk.services.s3.encryption.keywrap.EncryptKeyResponse;
 import software.amazon.awssdk.services.s3.encryption.keywrap.KeyWrapAlgorithm;
 
 public interface EncryptionCredentials {
-    Optional<EncryptedSecretKey> encryptWithAlgorithm(KeyWrapAlgorithm algorithm);
+    String id();
 
-    static Builder builder() {
-        return null;
+    Set<KeyWrapAlgorithm> supportedKeyWrapAlgorithms();
+
+    EncryptKeyResponse encryptKey(EncryptKeyRequest request);
+
+    default EncryptKeyResponse encryptKey(Consumer<EncryptKeyRequest.Builder> request) {
+        EncryptKeyRequest.Builder builder = EncryptKeyRequest.builder();
+        request.accept(builder);
+        return encryptKey(builder.build());
     }
 
-    interface Builder {
-        Builder credentials(KeyPair credentials);
-        Builder credentials(SecretKey credentials);
-        EncryptionCredentials build();
+    DecryptKeyResponse decryptKey(DecryptKeyRequest request);
+
+    default DecryptKeyResponse decryptKey(Consumer<DecryptKeyRequest.Builder> request) {
+        DecryptKeyRequest.Builder builder = DecryptKeyRequest.builder();
+        request.accept(builder);
+        return decryptKey(builder.build());
     }
 }

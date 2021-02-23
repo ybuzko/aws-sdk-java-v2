@@ -1,7 +1,10 @@
 package software.amazon.awssdk.services.s3.encryption.content;
 
-public interface EncryptContentResponse {
+import java.util.Map;
+
+public interface DecryptObjectRequest {
     Content ciphertext();
+    Map<String, String> metadata();
 
     static Builder builder() {
         return null;
@@ -9,6 +12,7 @@ public interface EncryptContentResponse {
 
     interface Builder {
         Builder ciphertext(Content content);
-        EncryptContentResponse build();
+        Builder metadata(Map<String, String> metadata);
+        DecryptObjectRequest build();
     }
 }

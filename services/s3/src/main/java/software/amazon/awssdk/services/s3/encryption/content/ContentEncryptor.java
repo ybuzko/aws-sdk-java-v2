@@ -1,6 +1,6 @@
 package software.amazon.awssdk.services.s3.encryption.content;
 
-import software.amazon.awssdk.services.s3.encryption.EncryptionContext;
+import java.util.function.Consumer;
 
 public interface ContentEncryptor {
     ContentEncryptor AES_GCM = null;
@@ -12,9 +12,11 @@ public interface ContentEncryptor {
 
     String name();
 
-    Content encryptContent(Content requestBody, EncryptionContext context);
-    AsyncContent encryptContent(AsyncContent requestBody, EncryptionContext context);
+    EncryptContentResponse encryptContent(EncryptContentRequest request);
 
-    Content decryptContent(Content requestBody, EncryptionContext context);
-    AsyncContent decryptContent(AsyncContent requestBody, EncryptionContext context);
+    EncryptContentResponse encryptContent(Consumer<EncryptContentRequest.Builder> request);
+
+    DecryptContentResponse decryptContent(DecryptContentRequest request);
+
+    DecryptContentResponse decryptContent(Consumer<DecryptContentRequest.Builder> request);
 }

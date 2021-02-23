@@ -1,10 +1,12 @@
-package software.amazon.awssdk.services.s3.encryption.keywrap;
+package software.amazon.awssdk.services.s3.encryption.internal.keywrap;
 
 import java.util.function.Consumer;
+import software.amazon.awssdk.services.s3.encryption.keywrap.DecryptKeyRequest;
+import software.amazon.awssdk.services.s3.encryption.keywrap.DecryptKeyResponse;
+import software.amazon.awssdk.services.s3.encryption.keywrap.EncryptKeyRequest;
+import software.amazon.awssdk.services.s3.encryption.keywrap.EncryptKeyResponse;
 
 public interface KeyEncryptor {
-    KeyWrapAlgorithm algorithm();
-    
     EncryptKeyResponse encryptKey(EncryptKeyRequest request);
 
     default EncryptKeyResponse encryptKey(Consumer<EncryptKeyRequest.Builder> request) {

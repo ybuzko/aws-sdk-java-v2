@@ -5,30 +5,29 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import javax.crypto.SecretKey;
+import software.amazon.awssdk.services.s3.encryption.EncryptionContext;
+import software.amazon.awssdk.services.s3.encryption.EncryptionPolicy;
+import software.amazon.awssdk.services.s3.encryption.S3EncryptionRuntime;
+import software.amazon.awssdk.services.s3.encryption.auth.EncryptionCredentials;
 import software.amazon.awssdk.services.s3.encryption.auth.ResolveKeyRequest;
+import software.amazon.awssdk.services.s3.encryption.auth.ResolveKeyResponse;
 import software.amazon.awssdk.services.s3.encryption.content.Content;
 import software.amazon.awssdk.services.s3.encryption.content.ContentEncryptor;
-import software.amazon.awssdk.services.s3.encryption.EncryptionContext;
-import software.amazon.awssdk.services.s3.encryption.auth.EncryptionCredentialsProvider;
-import software.amazon.awssdk.services.s3.encryption.EncryptionPolicy;
+import software.amazon.awssdk.services.s3.encryption.content.DecryptObjectRequest;
+import software.amazon.awssdk.services.s3.encryption.content.DecryptObjectResponse;
+import software.amazon.awssdk.services.s3.encryption.content.EncryptObjectRequest;
+import software.amazon.awssdk.services.s3.encryption.content.EncryptObjectResponse;
 import software.amazon.awssdk.services.s3.encryption.keywrap.DecryptKeyResponse;
 import software.amazon.awssdk.services.s3.encryption.keywrap.EncryptKeyResponse;
 import software.amazon.awssdk.services.s3.encryption.keywrap.EncryptedSecretKey;
-import software.amazon.awssdk.services.s3.encryption.keywrap.KeyEncryptor;
 import software.amazon.awssdk.services.s3.encryption.keywrap.KeyWrapAlgorithm;
-import software.amazon.awssdk.services.s3.encryption.S3EncryptionRuntime;
 import software.amazon.awssdk.services.s3.encryption.metadata.MetadataKey;
-import software.amazon.awssdk.services.s3.encryption.content.DecryptContentRequest;
-import software.amazon.awssdk.services.s3.encryption.content.DecryptContentResponse;
-import software.amazon.awssdk.services.s3.encryption.content.EncryptContentRequest;
-import software.amazon.awssdk.services.s3.encryption.content.EncryptContentResponse;
-import software.amazon.awssdk.services.s3.encryption.auth.ResolveKeyResponse;
 
 public class DefaultS3EncryptionRuntime implements S3EncryptionRuntime {
     private final KeyGeneratorProvider contentKeyGenerator;
     private final EncryptionPolicy encryptionPolicy;
-    private final List<EncryptionCredentialsProvider> additionalReadCredentialsProviders;
-    private final EncryptionCredentialsProvider readWriteCredentialsProvider;
+    private final List<EncryptionCredentials> additionalReadCredentialsProviders;
+    private final EncryptionCredentials readWriteCredentialsProvider;
     private final ContentEncryptor encryptor;
     private final KeyWrapAlgorithm keyWrapAlgorithm;
 
@@ -59,7 +58,7 @@ public class DefaultS3EncryptionRuntime implements S3EncryptionRuntime {
     }
 
     @Override
-    public DecryptContentResponse decryptContent(DecryptContentRequest request) {
+    public DecryptObjectResponse decryptObject(DecryptObjectRequest request) {
         EncryptionContext context = createContext(c -> c.metadata(request.metadata()));
 
         ResolveKeyResponse contentKeyResponse =
@@ -71,17 +70,19 @@ public class DefaultS3EncryptionRuntime implements S3EncryptionRuntime {
 
         context.copy(c -> c.contentEncryptionKey(contentKeyResponse.secretKey()));
 
-        Content decryptedContent = encryptor.decryptContent(request.content(), context);
+        Content decryptedContent = encryptor.decryptContent(r -> r.ciphertext(request.ciphertext())
+                                                                  .context(context))
+                                            .plaintext();
 
-        return DecryptContentResponse.builder()
-                                     .content(decryptedContent)
-                                     .contentType(null) // TODO : Restore from metadata
-                                     .contentEncoding(null) // TODO : Restore from metadata
-                                     .build();
+        return DecryptObjectResponse.builder()
+                                    .plaintext(decryptedContent)
+                                    .contentType(null) // TODO : Restore from metadata
+                                    .contentEncoding(null) // TODO : Restore from metadata
+                                    .build();
     }
 
     @Override
-    public EncryptContentResponse encryptContent(EncryptContentRequest request) {
+    public EncryptObjectResponse encryptObject(EncryptObjectRequest request) {
         EncryptionContext context = createContext(c -> c.metadata(request.metadata()));
 
         ResolveKeyResponse contentKeyResponse =
@@ -96,20 +97,22 @@ public class DefaultS3EncryptionRuntime implements S3EncryptionRuntime {
             contentKeyResponse.newMetadata().forEach(c::putMetadata);
         });
 
-        Content encryptedContent = encryptor.encryptContent(request.content(), context);
+        Content encryptedContent = encryptor.encryptContent(r -> r.plaintext(request.plaintext())
+                                                                  .context(context))
+                                            .ciphertext();
 
-        return EncryptContentResponse.builder()
-                                     .content(encryptedContent)
-                                     .metadata(request.metadata()) // TODO : Save original content-type to metadata
-                                     .contentType("application/octet-stream")
-                                     .contentEncoding(null) // TODO : What encoding is appropriate?
-                                     .build();
+        return EncryptObjectResponse.builder()
+                                    .ciphertext(encryptedContent)
+                                    .metadata(request.metadata()) // TODO : Save original content-type to metadata
+                                    .contentType("application/octet-stream")
+                                    .contentEncoding(null) // TODO : What encoding is appropriate?
+                                    .build();
     }
 
-    private EncryptionCredentialsProvider getReadCredentialsProvider(Map<String, String> metadata) {
+    private EncryptionCredentials getReadCredentialsProvider(Map<String, String> metadata) {
         String keyWrapAlgorithm = MetadataKey.KEY_WRAP_ALGORITHM.read(metadata);
 
-        for (EncryptionCredentialsProvider provider : additionalReadCredentialsProviders) {
+        for (EncryptionCredentials provider : additionalReadCredentialsProviders) {
             if (provider.supportedKeyWrapAlgorithms()
                         .stream()
                         .map(KeyWrapAlgorithm::name)
@@ -132,7 +135,6 @@ public class DefaultS3EncryptionRuntime implements S3EncryptionRuntime {
         EncryptedSecretKey encryptedKey = request.context().metadata(MetadataKey.ENCRYPTED_SECRET_KEY);
 
         if (encryptedKey == null) {
-            // TODO: Why indirection? Why not credentials decrypt/encrypt?
             return createNewKey(request);
         }
 
@@ -141,27 +143,28 @@ public class DefaultS3EncryptionRuntime implements S3EncryptionRuntime {
 
     private ResolveKeyResponse createNewKey(ResolveKeyRequest request) {
         SecretKey newKey = encryptionPolicy.keyGeneratorProvider().createKeyGenerator().generateKey();
-        KeyEncryptor keyEncryptor = request.credentialsProvider().createKeyEncryptor(request.algorithm());
-        EncryptKeyResponse encryptResponse = keyEncryptor.encryptKey(r -> r.key(newKey).context(request.context()));
+        EncryptKeyResponse encryptResponse =
+            request.credentialsProvider().encryptKey(r -> r.key(newKey)
+                                                           .keyWrapAlgorithm(request.keyWrapAlgorithm())
+                                                           .context(request.context()));
 
 
         return ResolveKeyResponse.builder()
                                  .secretKey(newKey)
                                  .putNewMetadata(MetadataKey.ENCRYPTED_SECRET_KEY, encryptResponse.key())
                                  .putNewMetadata(MetadataKey.KEY_ALGORITHM, newKey.getAlgorithm())
-                                 .putNewMetadata(MetadataKey.KEY_WRAP_ALGORITHM, request.algorithm().name())
+                                 .putNewMetadata(MetadataKey.KEY_WRAP_ALGORITHM, request.keyWrapAlgorithm().name())
                                  .build();
     }
 
     private ResolveKeyResponse decryptKey(ResolveKeyRequest request, EncryptedSecretKey encryptedKey) {
-        KeyEncryptor keyEncryptor = request.credentialsProvider().createKeyEncryptor(request.algorithm());
-        DecryptKeyResponse decryptResponse = keyEncryptor.decryptKey(r -> r.key(encryptedKey));
+        DecryptKeyResponse decryptResponse = request.credentialsProvider().decryptKey(r -> r.key(encryptedKey));
 
         return ResolveKeyResponse.builder()
                                  .secretKey(decryptResponse.key())
                                  .putNewMetadata(MetadataKey.ENCRYPTED_SECRET_KEY, encryptedKey)
                                  .putNewMetadata(MetadataKey.KEY_ALGORITHM, encryptedKey.keyAlgorithm())
-                                 .putNewMetadata(MetadataKey.KEY_WRAP_ALGORITHM, request.algorithm().name())
+                                 .putNewMetadata(MetadataKey.KEY_WRAP_ALGORITHM, request.keyWrapAlgorithm().name())
                                  .build();
     }
 
@@ -170,5 +173,10 @@ public class DefaultS3EncryptionRuntime implements S3EncryptionRuntime {
                                                             .encryptionPolicy(encryptionPolicy);
         consumer.accept(result);
         return result.build();
+    }
+
+    @Override
+    public void close() {
+        // TODO
     }
 }

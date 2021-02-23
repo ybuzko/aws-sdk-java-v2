@@ -7,6 +7,7 @@ import software.amazon.awssdk.utils.builder.ToCopyableBuilder;
 
 public interface EncryptKeyRequest extends ToCopyableBuilder<EncryptKeyRequest.Builder, EncryptKeyRequest> {
     SecretKey key();
+    KeyWrapAlgorithm keyWrapAlgorithm();
     EncryptionContext context();
 
     static Builder builder() {
@@ -15,6 +16,7 @@ public interface EncryptKeyRequest extends ToCopyableBuilder<EncryptKeyRequest.B
 
     interface Builder extends CopyableBuilder<Builder, EncryptKeyRequest> {
         Builder key(SecretKey key);
+        Builder keyWrapAlgorithm(KeyWrapAlgorithm algorithm);
         Builder context(EncryptionContext context);
 
         EncryptKeyRequest build();
