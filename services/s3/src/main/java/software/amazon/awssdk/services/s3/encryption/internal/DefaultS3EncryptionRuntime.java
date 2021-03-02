@@ -45,7 +45,7 @@ public class DefaultS3EncryptionRuntime implements S3EncryptionRuntime {
         Set<KeyWrapAlgorithm> supportedAlgorithms =
             readWriteCredentialsProvider.supportedKeyWrapAlgorithms();
         List<KeyWrapAlgorithm> preferredAlgorithms =
-            encryptionPolicy.preferredKeyEncryptionAlgorithms();
+            encryptionPolicy.preferredKeyWrapAlgorithms();
 
         for (KeyWrapAlgorithm algorithm : preferredAlgorithms) {
             if (supportedAlgorithms.contains(algorithm)) {

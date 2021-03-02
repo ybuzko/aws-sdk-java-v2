@@ -23,9 +23,6 @@ import software.amazon.awssdk.services.s3.encryption.model.ReencryptResponse;
  *     <li>{@code S3EncryptionClient} uses an {@link S3EncryptionRuntime} and {@link S3Client} "under-the-hood". Check out those
  *     classes for more configuration options. You can configure those classes via the {@link S3EncryptionClient.Builder}</li>
  * </ol>
- *
- * <p><b>Examples</b>
- * TODO
  */
 @SdkPublicApi
 @Immutable
@@ -117,7 +114,7 @@ public interface S3EncryptionClient extends S3Client {
         Builder readEncryptionCredentials(Collection<EncryptionCredentials> readEncryptionCredentials);
 
         /**
-         * Create an {@link S3EncryptionClient} using the configuration on this client.
+         * Create an {@link S3EncryptionClient} using the configuration on this builder.
          */
         S3EncryptionClient build();
     }
