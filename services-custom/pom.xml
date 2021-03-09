@@ -29,6 +29,7 @@
 
     <modules>
         <module>dynamodb-enhanced</module>
+        <module>s3-encryption</module>
     </modules>
 
     <dependencyManagement>
