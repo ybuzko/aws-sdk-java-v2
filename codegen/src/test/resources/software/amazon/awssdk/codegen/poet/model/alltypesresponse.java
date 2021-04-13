@@ -151,6 +151,30 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
                                                                                     .locationName("value").build()).build())
                                                             .build()).build()).build()).build();
 
+    private static final SdkField<List<Map<String, SimpleStruct>>> LIST_OF_MAP_OF_STRING_TO_STRUCT_FIELD = SdkField
+        .<List<Map<String, SimpleStruct>>> builder(MarshallingType.LIST)
+        .memberName("ListOfMapOfStringToStruct")
+        .getter(getter(AllTypesResponse::listOfMapOfStringToStruct))
+        .setter(setter(Builder::listOfMapOfStringToStruct))
+        .traits(LocationTrait.builder().location(MarshallLocation.PAYLOAD).locationName("ListOfMapOfStringToStruct").build(),
+                ListTrait
+                    .builder()
+                    .memberLocationName(null)
+                    .memberFieldInfo(
+                        SdkField.<Map<String, SimpleStruct>> builder(MarshallingType.MAP)
+                            .traits(LocationTrait.builder().location(MarshallLocation.PAYLOAD)
+                                                 .locationName("member").build(),
+                                    MapTrait.builder()
+                                            .keyLocationName("key")
+                                            .valueLocationName("value")
+                                            .valueFieldInfo(
+                                                SdkField.<SimpleStruct> builder(MarshallingType.SDK_POJO)
+                                                    .constructor(SimpleStruct::builder)
+                                                    .traits(LocationTrait.builder()
+                                                                         .location(MarshallLocation.PAYLOAD)
+                                                                         .locationName("value").build()).build())
+                                            .build()).build()).build()).build();
+
     private static final SdkField<Map<String, List<Integer>>> MAP_OF_STRING_TO_INTEGER_LIST_FIELD = SdkField
             .<Map<String, List<Integer>>> builder(MarshallingType.MAP)
             .memberName("MapOfStringToIntegerList")
@@ -398,8 +422,8 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
     private static final List<SdkField<?>> SDK_FIELDS = Collections.unmodifiableList(Arrays.asList(STRING_MEMBER_FIELD,
             INTEGER_MEMBER_FIELD, BOOLEAN_MEMBER_FIELD, FLOAT_MEMBER_FIELD, DOUBLE_MEMBER_FIELD, LONG_MEMBER_FIELD,
             SIMPLE_LIST_FIELD, LIST_OF_ENUMS_FIELD, LIST_OF_MAPS_FIELD, LIST_OF_STRUCTS_FIELD,
-            LIST_OF_MAP_OF_ENUM_TO_STRING_FIELD, MAP_OF_STRING_TO_INTEGER_LIST_FIELD, MAP_OF_STRING_TO_STRING_FIELD,
-            MAP_OF_STRING_TO_SIMPLE_STRUCT_FIELD, MAP_OF_ENUM_TO_ENUM_FIELD, MAP_OF_ENUM_TO_STRING_FIELD,
+            LIST_OF_MAP_OF_ENUM_TO_STRING_FIELD, LIST_OF_MAP_OF_STRING_TO_STRUCT_FIELD, MAP_OF_STRING_TO_INTEGER_LIST_FIELD,
+            MAP_OF_STRING_TO_STRING_FIELD, MAP_OF_STRING_TO_SIMPLE_STRUCT_FIELD, MAP_OF_ENUM_TO_ENUM_FIELD, MAP_OF_ENUM_TO_STRING_FIELD,
             MAP_OF_STRING_TO_ENUM_FIELD, MAP_OF_ENUM_TO_SIMPLE_STRUCT_FIELD, MAP_OF_ENUM_TO_LIST_OF_ENUMS_FIELD,
             MAP_OF_ENUM_TO_MAP_OF_STRING_TO_ENUM_FIELD, TIMESTAMP_MEMBER_FIELD, STRUCT_WITH_NESTED_TIMESTAMP_MEMBER_FIELD,
             BLOB_ARG_FIELD, STRUCT_WITH_NESTED_BLOB_FIELD, BLOB_MAP_FIELD, LIST_OF_BLOBS_FIELD, RECURSIVE_STRUCT_FIELD,
@@ -427,6 +451,8 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
     private final List<SimpleStruct> listOfStructs;
 
     private final List<Map<String, String>> listOfMapOfEnumToString;
+
+    private final List<Map<String, SimpleStruct>> listOfMapOfStringToStruct;
 
     private final Map<String, List<Integer>> mapOfStringToIntegerList;
 
@@ -481,6 +507,7 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
         this.listOfMaps = builder.listOfMaps;
         this.listOfStructs = builder.listOfStructs;
         this.listOfMapOfEnumToString = builder.listOfMapOfEnumToString;
+        this.listOfMapOfStringToStruct = builder.listOfMapOfStringToStruct;
         this.mapOfStringToIntegerList = builder.mapOfStringToIntegerList;
         this.mapOfStringToString = builder.mapOfStringToString;
         this.mapOfStringToSimpleStruct = builder.mapOfStringToSimpleStruct;
@@ -701,6 +728,30 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
      */
     public final List<Map<String, String>> listOfMapOfEnumToStringAsStrings() {
         return listOfMapOfEnumToString;
+    }
+
+    /**
+     * Returns true if the ListOfMapOfStringToStruct property was specified by the sender (it may be empty), or false if
+     * the sender did not specify the value (it will be empty). For responses returned by the SDK, the sender is the AWS
+     * service.
+     */
+    public final boolean hasListOfMapOfStringToStruct() {
+        return listOfMapOfStringToStruct != null && !(listOfMapOfStringToStruct instanceof SdkAutoConstructList);
+    }
+
+    /**
+     * Returns the value of the ListOfMapOfStringToStruct property for this object.
+     * <p>
+     * Attempts to modify the collection returned by this method will result in an UnsupportedOperationException.
+     * </p>
+     * <p>
+     * You can use {@link #hasListOfMapOfStringToStruct()} to see if a value was sent in this field.
+     * </p>
+     *
+     * @return The value of the ListOfMapOfStringToStruct property for this object.
+     */
+    public final List<Map<String, SimpleStruct>> listOfMapOfStringToStruct() {
+        return listOfMapOfStringToStruct;
     }
 
     /**
@@ -1185,6 +1236,7 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
         hashCode = 31 * hashCode + Objects.hashCode(hasListOfMaps() ? listOfMaps() : null);
         hashCode = 31 * hashCode + Objects.hashCode(hasListOfStructs() ? listOfStructs() : null);
         hashCode = 31 * hashCode + Objects.hashCode(hasListOfMapOfEnumToString() ? listOfMapOfEnumToStringAsStrings() : null);
+        hashCode = 31 * hashCode + Objects.hashCode(hasListOfMapOfStringToStruct() ? listOfMapOfStringToStruct() : null);
         hashCode = 31 * hashCode + Objects.hashCode(hasMapOfStringToIntegerList() ? mapOfStringToIntegerList() : null);
         hashCode = 31 * hashCode + Objects.hashCode(hasMapOfStringToString() ? mapOfStringToString() : null);
         hashCode = 31 * hashCode + Objects.hashCode(hasMapOfStringToSimpleStruct() ? mapOfStringToSimpleStruct() : null);
@@ -1236,6 +1288,8 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
                 && hasListOfStructs() == other.hasListOfStructs() && Objects.equals(listOfStructs(), other.listOfStructs())
                 && hasListOfMapOfEnumToString() == other.hasListOfMapOfEnumToString()
                 && Objects.equals(listOfMapOfEnumToStringAsStrings(), other.listOfMapOfEnumToStringAsStrings())
+               && hasListOfMapOfStringToStruct() == other.hasListOfMapOfStringToStruct()
+               && Objects.equals(listOfMapOfStringToStruct(), other.listOfMapOfStringToStruct())
                 && hasMapOfStringToIntegerList() == other.hasMapOfStringToIntegerList()
                 && Objects.equals(mapOfStringToIntegerList(), other.mapOfStringToIntegerList())
                 && hasMapOfStringToString() == other.hasMapOfStringToString()
@@ -1286,6 +1340,7 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
                 .add("ListOfMaps", hasListOfMaps() ? listOfMaps() : null)
                 .add("ListOfStructs", hasListOfStructs() ? listOfStructs() : null)
                 .add("ListOfMapOfEnumToString", hasListOfMapOfEnumToString() ? listOfMapOfEnumToStringAsStrings() : null)
+                .add("ListOfMapOfStringToStruct", hasListOfMapOfStringToStruct() ? listOfMapOfStringToStruct() : null)
                 .add("MapOfStringToIntegerList", hasMapOfStringToIntegerList() ? mapOfStringToIntegerList() : null)
                 .add("MapOfStringToString", hasMapOfStringToString() ? mapOfStringToString() : null)
                 .add("MapOfStringToSimpleStruct", hasMapOfStringToSimpleStruct() ? mapOfStringToSimpleStruct() : null)
@@ -1329,6 +1384,8 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
             return Optional.ofNullable(clazz.cast(listOfStructs()));
         case "ListOfMapOfEnumToString":
             return Optional.ofNullable(clazz.cast(listOfMapOfEnumToStringAsStrings()));
+        case "ListOfMapOfStringToStruct":
+            return Optional.ofNullable(clazz.cast(listOfMapOfStringToStruct()));
         case "MapOfStringToIntegerList":
             return Optional.ofNullable(clazz.cast(mapOfStringToIntegerList()));
         case "MapOfStringToString":
@@ -1565,6 +1622,24 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
          * @return Returns a reference to this object so that method calls can be chained together.
          */
         Builder listOfMapOfEnumToStringWithStrings(Map<String, String>... listOfMapOfEnumToString);
+
+        /**
+         * Sets the value of the ListOfMapOfStringToStruct property for this object.
+         *
+         * @param listOfMapOfStringToStruct
+         *        The new value for the ListOfMapOfStringToStruct property for this object.
+         * @return Returns a reference to this object so that method calls can be chained together.
+         */
+        Builder listOfMapOfStringToStruct(Collection<? extends Map<String, SimpleStruct>> listOfMapOfStringToStruct);
+
+        /**
+         * Sets the value of the ListOfMapOfStringToStruct property for this object.
+         *
+         * @param listOfMapOfStringToStruct
+         *        The new value for the ListOfMapOfStringToStruct property for this object.
+         * @return Returns a reference to this object so that method calls can be chained together.
+         */
+        Builder listOfMapOfStringToStruct(Map<String, SimpleStruct>... listOfMapOfStringToStruct);
 
         /**
          * Sets the value of the MapOfStringToIntegerList property for this object.
@@ -1955,6 +2030,8 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
 
         private List<Map<String, String>> listOfMapOfEnumToString = DefaultSdkAutoConstructList.getInstance();
 
+        private List<Map<String, SimpleStruct>> listOfMapOfStringToStruct = DefaultSdkAutoConstructList.getInstance();
+
         private Map<String, List<Integer>> mapOfStringToIntegerList = DefaultSdkAutoConstructMap.getInstance();
 
         private Map<String, String> mapOfStringToString = DefaultSdkAutoConstructMap.getInstance();
@@ -2011,6 +2088,7 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
             listOfMaps(model.listOfMaps);
             listOfStructs(model.listOfStructs);
             listOfMapOfEnumToStringWithStrings(model.listOfMapOfEnumToString);
+            listOfMapOfStringToStruct(model.listOfMapOfStringToStruct);
             mapOfStringToIntegerList(model.mapOfStringToIntegerList);
             mapOfStringToString(model.mapOfStringToString);
             mapOfStringToSimpleStruct(model.mapOfStringToSimpleStruct);
@@ -2257,6 +2335,32 @@ public final class AllTypesResponse extends JsonProtocolTestsResponse implements
 
         public final void setListOfMapOfEnumToString(Collection<? extends Map<String, String>> listOfMapOfEnumToString) {
             this.listOfMapOfEnumToString = ListOfMapOfEnumToStringCopier.copy(listOfMapOfEnumToString);
+        }
+
+        public final Collection<Map<String, SimpleStruct.Builder>> getListOfMapOfStringToStruct() {
+            if (listOfMapOfStringToStruct instanceof SdkAutoConstructList) {
+                return null;
+            }
+            return listOfMapOfStringToStruct != null ? listOfMapOfStringToStruct.stream()
+                                                                                .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue().toBuilder()))
+                                                                                .collect(Collectors.toList()) : null;
+        }
+
+        @Override
+        public final Builder listOfMapOfStringToStruct(Collection<? extends Map<String, SimpleStruct>> listOfMapOfStringToStruct) {
+            this.listOfMapOfStringToStruct = ListOfMapOfStringToStructCopier.copy(listOfMapOfStringToStruct);
+            return this;
+        }
+
+        @Override
+        @SafeVarargs
+        public final Builder listOfMapOfStringToStruct(Map<String, SimpleStruct>... listOfMapOfStringToStruct) {
+            listOfMapOfStringToStruct(Arrays.asList(listOfMapOfStringToStruct));
+            return this;
+        }
+
+        public final void setListOfMapOfStringToStruct(Collection<Map<String, SimpleStruct.BuilderImpl>> listOfMapOfStringToStruct) {
+            this.listOfMapOfStringToStruct = ListOfMapOfStringToStructCopier.copyFromBuilder(listOfMapOfStringToStruct);
         }
 
         public final Map<String, ? extends Collection<Integer>> getMapOfStringToIntegerList() {
