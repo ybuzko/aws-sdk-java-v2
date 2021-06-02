@@ -1,0 +1,12 @@
+{
+    "modules": {
+        "third-party-jackson-core": {
+            "artifactType": "JAR",
+            "artifacts": ["target/aws-sdk-java-third-party-jackson-core-*.jar"]
+        },
+        "third-party-jackson-dataformat-cbor": {
+            "artifactType": "JAR",
+            "artifacts": ["target/aws-sdk-java-third-party-jackson-dataformat-cbor-*.jar"]
+        }
+    }
+}
