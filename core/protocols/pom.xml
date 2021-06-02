@@ -36,6 +36,7 @@
         <module>aws-cbor-protocol</module>
         <module>aws-ion-protocol</module>
         <module>aws-xml-protocol</module>
+        <module>json-core</module>
         <module>protocol-core</module>
     </modules>
 
