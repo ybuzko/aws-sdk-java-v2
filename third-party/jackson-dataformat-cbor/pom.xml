@@ -24,8 +24,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>jackson-core</artifactId>
-    <name>AWS Java SDK :: Third Party :: Jackson-core</name>
+    <artifactId>jackson-dataformat-cbor</artifactId>
+    <name>AWS Java SDK :: Third Party :: Jackson-dataformat-cbor</name>
     <url>https://aws.amazon.com/sdkforjava</url>
 
     <dependencyManagement>
@@ -42,9 +42,15 @@
 
     <dependencies>
         <dependency>
-            <!-- Shaded -->
-            <groupId>com.fasterxml.jackson.core</groupId>
+            <groupId>software.amazon.awssdk</groupId>
             <artifactId>jackson-core</artifactId>
+            <version>${awsjavasdk.version}</version>
+        </dependency>
+
+        <!-- Shaded -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-cbor</artifactId>
             <version>${jackson.version}</version>
             <optional>true</optional>
         </dependency>
@@ -61,10 +67,14 @@
                 <configuration>
                     <artifactSet>
                         <includes>
-                            <include>com.fasterxml.jackson.core:*</include>
+                            <include>com.fasterxml.jackson.dataformat:*</include>
                         </includes>
                     </artifactSet>
                     <relocations>
+                        <relocation>
+                            <pattern>com.fasterxml.jackson.dataformat.cbor</pattern>
+                            <shadedPattern>software.amazon.awssdk.thirdparty.dataformat.cbor</shadedPattern>
+                        </relocation>
                         <relocation>
                             <pattern>com.fasterxml.jackson.core</pattern>
                             <shadedPattern>software.amazon.awssdk.thirdparty.jackson.core</shadedPattern>
@@ -99,7 +109,7 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>${basedir}/target/aws-sdk-java-jackson-core-${project.version}.jar</file>
+                                    <file>${basedir}/target/aws-sdk-java-jackson-dataformat-cbor-${project.version}.jar</file>
                                     <type>jar</type>
                                     <classifier>optional</classifier>
                                 </artifact>
@@ -114,7 +124,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>software.amazon.awssdk.thirdparty.jackson.core</Automatic-Module-Name>
+                            <Automatic-Module-Name>software.amazon.awssdk.thirdparty.dataformat.cbor</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>

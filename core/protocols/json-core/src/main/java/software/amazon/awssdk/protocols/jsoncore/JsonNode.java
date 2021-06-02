@@ -13,7 +13,7 @@ import software.amazon.awssdk.protocols.jsoncore.internal.NumberJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.ObjectJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.ObjectJsonNodeBuilder;
 import software.amazon.awssdk.protocols.jsoncore.internal.StringJsonNode;
-import software.amazon.awssdk.thirdparty.jacksoncore.core.JsonFactory;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 
 @SdkProtectedApi
 public interface JsonNode {

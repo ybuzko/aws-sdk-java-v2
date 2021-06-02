@@ -21,9 +21,9 @@ import java.io.UncheckedIOException;
 import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
-import software.amazon.awssdk.thirdparty.jacksoncore.core.JsonFactory;
-import software.amazon.awssdk.thirdparty.jacksoncore.core.JsonParser;
-import software.amazon.awssdk.thirdparty.jacksoncore.core.JsonToken;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonParser;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonToken;
 
 /**
  * Parses an JSON document into a simple DOM-like structure, {@link JsonNode}.
