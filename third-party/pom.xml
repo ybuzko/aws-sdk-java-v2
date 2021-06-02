@@ -34,7 +34,6 @@
 
     <modules>
         <module>jackson-core</module>
-        <module>dsl-json</module>
     </modules>
 
     <dependencyManagement>
