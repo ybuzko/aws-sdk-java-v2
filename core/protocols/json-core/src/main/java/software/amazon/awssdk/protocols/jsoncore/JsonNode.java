@@ -1,19 +1,22 @@
 package software.amazon.awssdk.protocols.jsoncore;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkProtectedApi;
 import software.amazon.awssdk.protocols.jsoncore.internal.ArrayJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.ArrayJsonNodeBuilder;
 import software.amazon.awssdk.protocols.jsoncore.internal.BooleanJsonNode;
-import software.amazon.awssdk.protocols.jsoncore.internal.JsonNodeParser;
 import software.amazon.awssdk.protocols.jsoncore.internal.NullJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.NumberJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.ObjectJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.ObjectJsonNodeBuilder;
 import software.amazon.awssdk.protocols.jsoncore.internal.StringJsonNode;
-import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonParseException;
+import software.amazon.awssdk.utils.StringInputStream;
 
 @SdkProtectedApi
 public interface JsonNode {
@@ -43,24 +46,39 @@ public interface JsonNode {
         return false;
     }
 
-    default JsonNumber asNumber() {
-        throw new UnsupportedOperationException();
-    }
+    JsonNumber asNumber();
 
-    default String asString() {
-        throw new UnsupportedOperationException();
-    }
+    String asString();
 
-    default boolean asBoolean() {
-        throw new UnsupportedOperationException();
-    }
+    boolean asBoolean();
 
-    default List<JsonNode> asArray() {
-        throw new UnsupportedOperationException();
-    }
+    List<JsonNode> asArray();
 
-    default Map<String, JsonNode> asObject() {
-        throw new UnsupportedOperationException();
+    Map<String, JsonNode> asObject();
+
+    default Optional<JsonNode> get(String subKey, String... additionalKeys) {
+        if (!isObject()) {
+            return Optional.empty();
+        }
+
+        JsonNode current = asObject().get(subKey);
+        if (current == null) {
+            return Optional.empty();
+        }
+
+        for (String key : additionalKeys) {
+            if (!current.isObject()) {
+                return Optional.empty();
+            }
+
+            current = current.asObject().get(key);
+
+            if (current == null) {
+                return Optional.empty();
+            }
+        }
+
+        return Optional.ofNullable(current);
     }
 
     static JsonNode nullNode() {
@@ -85,10 +103,6 @@ public interface JsonNode {
 
     static JsonNode objectNode(Map<String, JsonNode> object) {
         return ObjectJsonNode.create(object);
-    }
-
-    static JsonNode parse(JsonFactory factory, InputStream input) {
-        return JsonNodeParser.parse(factory, input);
     }
 
     static ObjectBuilder objectNodeBuilder() {

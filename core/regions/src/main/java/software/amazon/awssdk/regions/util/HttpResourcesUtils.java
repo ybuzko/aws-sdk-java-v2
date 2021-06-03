@@ -15,7 +15,6 @@
 
 package software.amazon.awssdk.regions.util;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -25,7 +24,8 @@ import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.annotations.SdkProtectedApi;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.exception.SdkServiceException;
-import software.amazon.awssdk.core.util.json.JacksonUtils;
+import software.amazon.awssdk.protocols.jsoncore.JsonNode;
+import software.amazon.awssdk.protocols.jsoncore.JsonNodeParser;
 import software.amazon.awssdk.regions.internal.util.ConnectionUtils;
 import software.amazon.awssdk.utils.IoUtils;
 
@@ -33,6 +33,7 @@ import software.amazon.awssdk.utils.IoUtils;
 public final class HttpResourcesUtils {
 
     private static final Logger log = LoggerFactory.getLogger(HttpResourcesUtils.class);
+    private static final JsonNodeParser JSON_PARSER = JsonNodeParser.create();
 
     private static volatile HttpResourcesUtils instance;
 
@@ -154,12 +155,11 @@ public final class HttpResourcesUtils {
             String errorResponse = IoUtils.toUtf8String(errorStream);
 
             try {
-                JsonNode node = JacksonUtils.jsonNodeOf(errorResponse);
-                JsonNode code = node.get("code");
-                JsonNode message = node.get("message");
-                if (code != null && message != null) {
-                    responseMessage = message.asText();
-                }
+                responseMessage = JSON_PARSER.parse(errorResponse)
+                                             .get("message")
+                                             .filter(JsonNode::isString)
+                                             .map(JsonNode::asString)
+                                             .orElse(null);
             } catch (RuntimeException exception) {
                 log.debug("Unable to parse error stream", exception);
             }

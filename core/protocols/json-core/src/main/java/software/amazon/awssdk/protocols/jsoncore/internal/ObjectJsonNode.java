@@ -2,9 +2,12 @@ package software.amazon.awssdk.protocols.jsoncore.internal;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
+import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
 import software.amazon.awssdk.utils.Validate;
 
 @SdkInternalApi
@@ -34,6 +37,26 @@ public final class ObjectJsonNode implements JsonNode {
     @Override
     public boolean isObject() {
         return true;
+    }
+
+    @Override
+    public JsonNumber asNumber() {
+        throw new UnsupportedOperationException("A JSON object cannot be converted to a number.");
+    }
+
+    @Override
+    public String asString() {
+        throw new UnsupportedOperationException("A JSON object cannot be converted to a string.");
+    }
+
+    @Override
+    public boolean asBoolean() {
+        throw new UnsupportedOperationException("A JSON object cannot be converted to a boolean.");
+    }
+
+    @Override
+    public List<JsonNode> asArray() {
+        throw new UnsupportedOperationException("A JSON object cannot be converted to an array.");
     }
 
     @Override

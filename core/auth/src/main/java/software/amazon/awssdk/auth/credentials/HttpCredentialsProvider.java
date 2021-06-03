@@ -15,15 +15,14 @@
 
 package software.amazon.awssdk.auth.credentials;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkProtectedApi;
 import software.amazon.awssdk.core.exception.SdkClientException;
-import software.amazon.awssdk.core.util.json.JacksonUtils;
+import software.amazon.awssdk.protocols.jsoncore.JsonNode;
+import software.amazon.awssdk.protocols.jsoncore.JsonNodeParser;
 import software.amazon.awssdk.regions.util.HttpResourcesUtils;
 import software.amazon.awssdk.regions.util.ResourcesEndpointProvider;
 import software.amazon.awssdk.utils.ComparableUtils;
@@ -40,6 +39,11 @@ import software.amazon.awssdk.utils.cache.RefreshResult;
  */
 @SdkProtectedApi
 public abstract class HttpCredentialsProvider implements AwsCredentialsProvider, SdkAutoCloseable {
+    private static final JsonNodeParser SENSITIVE_PARSER =
+        JsonNodeParser.builder()
+                      .removeErrorLocations(true)
+                      .build();
+
     private final Optional<CachedSupplier<AwsCredentials>> credentialsCache;
 
     protected HttpCredentialsProvider(BuilderImpl<?, ?> builder) {
@@ -73,18 +77,18 @@ public abstract class HttpCredentialsProvider implements AwsCredentialsProvider,
         try {
             String credentialsResponse = HttpResourcesUtils.instance().readResource(getCredentialsEndpointProvider());
 
-            JsonNode node = JacksonUtils.sensitiveJsonNodeOf(credentialsResponse);
-            JsonNode accessKey = node.get("AccessKeyId");
-            JsonNode secretKey = node.get("SecretAccessKey");
-            JsonNode token = node.get("Token");
-            JsonNode expirationNode = node.get("Expiration");
+            JsonNode node = SENSITIVE_PARSER.parse(credentialsResponse);
+            JsonNode accessKey = node.get("AccessKeyId").orElse(null);
+            JsonNode secretKey = node.get("SecretAccessKey").orElse(null);
+            JsonNode token = node.get("Token").orElse(null);
+            JsonNode expirationNode = node.get("Expiration").orElse(null);
 
             Validate.notNull(accessKey, "Failed to load access key.");
             Validate.notNull(secretKey, "Failed to load secret key.");
 
             AwsCredentials credentials =
-                token == null ? AwsBasicCredentials.create(accessKey.asText(), secretKey.asText())
-                              : AwsSessionCredentials.create(accessKey.asText(), secretKey.asText(), token.asText());
+                token == null ? AwsBasicCredentials.create(accessKey.asString(), secretKey.asString())
+                              : AwsSessionCredentials.create(accessKey.asString(), secretKey.asString(), token.asString());
 
             Instant expiration = getExpiration(expirationNode).orElse(null);
             if (expiration != null && Instant.now().isAfter(expiration)) {
@@ -98,11 +102,6 @@ public abstract class HttpCredentialsProvider implements AwsCredentialsProvider,
                                 .build();
         } catch (SdkClientException e) {
             throw e;
-        } catch (JsonMappingException e) {
-            throw SdkClientException.builder()
-                                    .message("Unable to parse response returned from service endpoint.")
-                                    .cause(e)
-                                    .build();
         } catch (RuntimeException | IOException e) {
             throw SdkClientException.builder()
                                     .message("Unable to load credentials from service endpoint.")
@@ -114,7 +113,7 @@ public abstract class HttpCredentialsProvider implements AwsCredentialsProvider,
     private Optional<Instant> getExpiration(JsonNode expirationNode) {
         return Optional.ofNullable(expirationNode).map(node -> {
             // Convert the expirationNode string to ISO-8601 format.
-            String expirationValue = node.asText().replaceAll("\\+0000$", "Z");
+            String expirationValue = node.asString().replaceAll("\\+0000$", "Z");
 
             try {
                 return DateUtils.parseIso8601Date(expirationValue);

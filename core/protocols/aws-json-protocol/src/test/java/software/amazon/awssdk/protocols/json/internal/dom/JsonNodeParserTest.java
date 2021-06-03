@@ -25,7 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import software.amazon.awssdk.utils.StringInputStream;
 
-public class JsonDomParserTest {
+public class JsonNodeParserTest {
 
     private JsonDomParser parser;
 
