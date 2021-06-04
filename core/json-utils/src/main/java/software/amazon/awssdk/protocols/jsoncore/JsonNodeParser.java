@@ -19,7 +19,13 @@ import static software.amazon.awssdk.utils.FunctionalUtils.invokeSafely;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import software.amazon.awssdk.annotations.SdkProtectedApi;
+import software.amazon.awssdk.protocols.jsoncore.internal.DefaultJsonArray;
+import software.amazon.awssdk.protocols.jsoncore.internal.DefaultJsonObject;
 import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 import software.amazon.awssdk.thirdparty.jackson.core.JsonParseException;
 import software.amazon.awssdk.thirdparty.jackson.core.JsonParser;
@@ -29,13 +35,18 @@ import software.amazon.awssdk.thirdparty.jackson.core.json.JsonReadFeature;
 
 /**
  * Parses an JSON document into a simple DOM-like structure, {@link JsonNode}.
+ *
+ * <p>This is created using {@link #create()} or {@link #builder()}.
  */
 @SdkProtectedApi
 public final class JsonNodeParser {
+    /**
+     * The default {@link JsonFactory} used for {@link #create()} or if a factory is not configured via
+     * {@link Builder#jsonFactory(JsonFactory)}.
+     */
     public static final JsonFactory DEFAULT_JSON_FACTORY =
         JsonFactory.builder()
                    .configure(JsonReadFeature.ALLOW_JAVA_COMMENTS, true)
-                   .configure(StreamReadFeature.AUTO_CLOSE_SOURCE, false)
                    .build();
 
     private final boolean removeErrorLocations;
@@ -46,14 +57,23 @@ public final class JsonNodeParser {
         this.jsonFactory = builder.jsonFactory;
     }
 
+    /**
+     * Create a parser using the default configuration.
+     */
     public static JsonNodeParser create() {
         return builder().build();
     }
 
+    /**
+     * Create a parser using custom configuration.
+     */
     public static JsonNodeParser.Builder builder() {
         return new Builder();
     }
 
+    /**
+     * Parse the provided {@link InputStream} into a {@link JsonNode}.
+     */
     public JsonNode parse(InputStream content) {
         return invokeSafely(() -> {
             try (JsonParser parser = jsonFactory.createParser(content)
@@ -63,6 +83,21 @@ public final class JsonNodeParser {
         });
     }
 
+    /**
+     * Parse the provided {@code byte[]} into a {@link JsonNode}.
+     */
+    public JsonNode parse(byte[] content) {
+        return invokeSafely(() -> {
+            try (JsonParser parser = jsonFactory.createParser(content)
+                                                .configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, false)) {
+                return parse(parser);
+            }
+        });
+    }
+
+    /**
+     * Parse the provided {@link String} into a {@link JsonNode}.
+     */
     public JsonNode parse(String content) {
         return invokeSafely(() -> {
             try (JsonParser parser = jsonFactory.createParser(content)
@@ -114,7 +149,7 @@ public final class JsonNodeParser {
                 return JsonNode.nullNode();
             case VALUE_NUMBER_FLOAT:
             case VALUE_NUMBER_INT:
-                return JsonNode.numberNode(JsonNumber.of(parser.getNumberValue()));
+                return JsonNode.numberNode(JsonNumber.create(parser.getNumberValue()));
             case START_OBJECT:
                 return parseObject(parser);
             case START_ARRAY:
@@ -126,43 +161,62 @@ public final class JsonNodeParser {
 
     private JsonNode parseObject(JsonParser parser) throws IOException {
         JsonToken currentToken = parser.nextToken();
-        JsonNode.ObjectBuilder builder = JsonNode.objectNodeBuilder();
+        Map<String, JsonNode> object = new LinkedHashMap<>();
         while (currentToken != JsonToken.END_OBJECT) {
             String fieldName = parser.getText();
-            builder.put(fieldName, parseToken(parser, parser.nextToken()));
+            object.put(fieldName, parseToken(parser, parser.nextToken()));
             currentToken = parser.nextToken();
         }
-        return builder.build();
+        return JsonNode.objectNode(DefaultJsonObject.createUnsafe(object));
     }
 
     private JsonNode parseArray(JsonParser parser) throws IOException {
         JsonToken currentToken = parser.nextToken();
-        JsonNode.ArrayBuilder builder = JsonNode.arrayNodeBuilder();
+        List<JsonNode> array = new ArrayList<>();
         while (currentToken != JsonToken.END_ARRAY) {
-            builder.add(parseToken(parser, currentToken));
+            array.add(parseToken(parser, currentToken));
             currentToken = parser.nextToken();
         }
-        return builder.build();
+        return JsonNode.arrayNode(DefaultJsonArray.createUnsafe(array));
     }
 
+    /**
+     * A builder for configuring and creating {@link JsonNodeParser}. Created via {@link #builder()}.
+     */
     public static final class Builder {
         private JsonFactory jsonFactory = DEFAULT_JSON_FACTORY;
         private boolean removeErrorLocations = false;
 
+        private Builder() {}
+
+        /**
+         * Whether error locations should be removed if parsing fails. This prevents the content of the JSON from appearing in
+         * error messages. This is useful when the content of the JSON may be sensitive and not want to be logged.
+         *
+         * <p>By default, this is false.
+         */
         public Builder removeErrorLocations(boolean removeErrorLocations) {
             this.removeErrorLocations = removeErrorLocations;
             return this;
         }
 
         /**
-         * TODO: Recommended to share JsonFactory instances per http://wiki.fasterxml
-         * .com/JacksonBestPracticesPerformance
+         * The {@link JsonFactory} implementation to be used when parsing the input. This allows JSON extensions like CBOR or
+         * Ion to be supported.
+         *
+         * <p>It's highly recommended us use a shared {@code JsonFactory} where possible, so they should be stored statically:
+         * http://wiki.fasterxml.com/JacksonBestPracticesPerformance
+         *
+         * <p>By default, this is {@link #DEFAULT_JSON_FACTORY}.
          */
         public Builder jsonFactory(JsonFactory jsonFactory) {
             this.jsonFactory = jsonFactory;
             return this;
         }
 
+        /**
+         * Build a {@link JsonNodeParser} based on the current configuration of this builder.
+         */
         public JsonNodeParser build() {
             return new JsonNodeParser(this);
         }

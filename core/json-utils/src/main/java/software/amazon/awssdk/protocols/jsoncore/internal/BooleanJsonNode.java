@@ -21,17 +21,15 @@ import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
 import software.amazon.awssdk.protocols.jsoncore.JsonObject;
 
+/**
+ * A boolean {@link JsonNode}.
+ */
 @SdkInternalApi
 public final class BooleanJsonNode implements JsonNode {
     private final boolean value;
 
     public BooleanJsonNode(boolean value) {
         this.value = value;
-    }
-
-    @Override
-    public Type type() {
-        return Type.BOOLEAN;
     }
 
     @Override

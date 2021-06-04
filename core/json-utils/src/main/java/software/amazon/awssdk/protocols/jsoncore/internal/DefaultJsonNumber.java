@@ -18,11 +18,16 @@ package software.amazon.awssdk.protocols.jsoncore.internal;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
+import software.amazon.awssdk.utils.Validate;
 
+/**
+ * Default implementation of {@link JsonNumber}.
+ */
 public class DefaultJsonNumber implements JsonNumber {
     private final Number number;
 
     public DefaultJsonNumber(Number number) {
+        Validate.paramNotNull(number, "number");
         this.number = number;
     }
 
@@ -79,6 +84,10 @@ public class DefaultJsonNumber implements JsonNumber {
     public BigInteger asBigInteger() {
         if (isBigInteger()) {
             return (BigInteger) number;
+        }
+
+        if (isFloatingPoint()) {
+            return asBigDecimal().toBigInteger();
         }
 
         return BigInteger.valueOf(number.longValue());

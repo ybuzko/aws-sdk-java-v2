@@ -17,19 +17,64 @@ package software.amazon.awssdk.protocols.jsoncore;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import software.amazon.awssdk.protocols.jsoncore.internal.DefaultJsonNumber;
 
+/**
+ * A value in a JSON number node.
+ *
+ * <p>Because JSON does not distinguish between floating point or integer numbers, but Java does, the two options can be
+ * differentiated via {@link #isInteger()} and {@link #isFloatingPoint()}.
+ *
+ * <p>The numeric value can be extracted via "as" methods, like {@link #asBigDecimal()} and {@link #asBigInteger()}</p>.
+ */
 public interface JsonNumber {
+    /**
+     * Returns true if this number is a whole number without a decimal component. The value can be extracted via {@link #asInt()},
+     * {@link #asLong()} or {@link #asBigInteger()}.
+     */
     boolean isInteger();
+
+    /**
+     * Returns true if this number is a floating point number with a decimal component. The value can be extracted via
+     * {@link #asDouble()}, or {@link #asBigDecimal()}.
+     */
     boolean isFloatingPoint();
 
+    /**
+     * Convert this number to a {@link BigDecimal}. This does not lose any precision, regardless of the type.
+     */
     BigDecimal asBigDecimal();
-    BigInteger asBigInteger();
+
+    /**
+     * Convert this number to a {@code double}. This will be an inexact conversion from the value sent on the wire. If exact
+     * precision is required, use {@link #asBigDecimal()}.
+     */
     double asDouble();
 
-    int asInt();
+    /**
+     * Convert this number to a {@link BigInteger}. If {@link #isFloatingPoint()} is true, the decimal component will be
+     * removed via truncation (dropped). This does not lose any precision if {@link #isInteger()} is true.
+     */
+    BigInteger asBigInteger();
+
+    /**
+     * Convert this number to a {@code long}. If {@link #isFloatingPoint()} is true, the decimal component will be removed via
+     * truncation (dropped). If the number is larger than can fit into an int, {@link Long#MAX_VALUE} is used. If the number
+     * is smaller than can fit into an int, {@link Long#MIN_VALUE} is used.
+     */
     long asLong();
 
-    static JsonNumber of(Number number) {
-        return null;
+    /**
+     * Convert this number to an {@code int}. If {@link #isFloatingPoint()} is true, the decimal component will be removed via
+     * truncation (dropped). If the number is larger than can fit into an int, {@link Integer#MAX_VALUE} is used. If the number
+     * is smaller than can fit into an int, {@link Integer#MIN_VALUE} is used.
+     */
+    int asInt();
+
+    /**
+     * Create a {@link JsonNumber} based on the provided {@link Number}.
+     */
+    static JsonNumber create(Number number) {
+        return new DefaultJsonNumber(number);
     }
 }

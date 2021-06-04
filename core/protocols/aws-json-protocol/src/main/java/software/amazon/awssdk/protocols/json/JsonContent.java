@@ -68,14 +68,14 @@ public class JsonContent {
 
     private static JsonNode parseJsonContent(byte[] rawJsonContent, JsonFactory jsonFactory) {
         if (rawJsonContent == null || rawJsonContent.length == 0) {
-            return JsonNode.objectNodeBuilder().build();
+            return JsonNode.emptyObjectNode();
         }
         try {
             JsonNodeParser parser = JsonNodeParser.builder().jsonFactory(jsonFactory).build();
-            return parser.parse(new ByteArrayInputStream(rawJsonContent));
+            return parser.parse(rawJsonContent);
         } catch (Exception e) {
             LOG.debug("Unable to parse HTTP response content", e);
-            return JsonNode.objectNodeBuilder().build();
+            return JsonNode.emptyObjectNode();
         }
     }
 

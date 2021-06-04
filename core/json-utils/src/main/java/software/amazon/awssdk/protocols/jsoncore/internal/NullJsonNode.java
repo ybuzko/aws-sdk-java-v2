@@ -21,6 +21,9 @@ import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
 import software.amazon.awssdk.protocols.jsoncore.JsonObject;
 
+/**
+ * A null {@link JsonNode}.
+ */
 @SdkInternalApi
 public final class NullJsonNode implements JsonNode {
     private static final NullJsonNode INSTANCE = new NullJsonNode();
@@ -30,11 +33,6 @@ public final class NullJsonNode implements JsonNode {
     }
 
     private NullJsonNode() {}
-
-    @Override
-    public Type type() {
-        return Type.NULL;
-    }
 
     @Override
     public boolean isNull() {

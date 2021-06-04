@@ -20,18 +20,18 @@ import software.amazon.awssdk.protocols.jsoncore.JsonArray;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
 import software.amazon.awssdk.protocols.jsoncore.JsonObject;
+import software.amazon.awssdk.utils.Validate;
 
+/**
+ * An embedded object {@link JsonNode}.
+ */
 @SdkInternalApi
 public final class EmbeddedObjectJsonNode implements JsonNode {
     private final Object embeddedObject;
 
     public EmbeddedObjectJsonNode(Object embeddedObject) {
+        Validate.paramNotNull(embeddedObject, "embeddedObject");
         this.embeddedObject = embeddedObject;
-    }
-
-    @Override
-    public Type type() {
-        return Type.OBJECT;
     }
 
     @Override

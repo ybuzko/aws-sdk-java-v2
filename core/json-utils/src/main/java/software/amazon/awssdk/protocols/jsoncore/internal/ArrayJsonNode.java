@@ -20,18 +20,18 @@ import software.amazon.awssdk.protocols.jsoncore.JsonArray;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
 import software.amazon.awssdk.protocols.jsoncore.JsonObject;
+import software.amazon.awssdk.utils.Validate;
 
+/**
+ * An array {@link JsonNode}.
+ */
 @SdkInternalApi
 public final class ArrayJsonNode implements JsonNode {
     private final JsonArray value;
 
     public ArrayJsonNode(JsonArray value) {
+        Validate.paramNotNull(value, "value");
         this.value = value;
-    }
-
-    @Override
-    public Type type() {
-        return Type.ARRAY;
     }
 
     @Override

@@ -22,17 +22,16 @@ import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
 import software.amazon.awssdk.protocols.jsoncore.JsonObject;
 import software.amazon.awssdk.utils.Validate;
 
+/**
+ * A string {@link JsonNode}.
+ */
 @SdkInternalApi
 public final class StringJsonNode implements JsonNode {
     private final String value;
 
     public StringJsonNode(String value) {
-        this.value = Validate.notNull(value, "JSON string must not be null");
-    }
-
-    @Override
-    public Type type() {
-        return Type.STRING;
+        Validate.paramNotNull(value, "value");
+        this.value = value;
     }
 
     @Override

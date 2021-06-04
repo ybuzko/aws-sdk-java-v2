@@ -101,6 +101,6 @@ public class JsonErrorCodeParserTest {
     @Test
     public void parseErrorType_NotPresentInHeadersAndEmptyContent_ReturnsNull() {
         assertNull(parser.parseErrorCode(httpResponseWithoutHeaders(),
-                                         new JsonContent(null, JsonNode.objectNodeBuilder().build())));
+                                         new JsonContent(null, JsonNode.emptyObjectNode())));
     }
 }
