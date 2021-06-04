@@ -73,13 +73,22 @@
                     <relocations>
                         <relocation>
                             <pattern>com.fasterxml.jackson.dataformat.cbor</pattern>
-                            <shadedPattern>software.amazon.awssdk.thirdparty.dataformat.cbor</shadedPattern>
+                            <shadedPattern>software.amazon.awssdk.thirdparty.jackson.dataformat.cbor</shadedPattern>
                         </relocation>
                         <relocation>
                             <pattern>com.fasterxml.jackson.core</pattern>
                             <shadedPattern>software.amazon.awssdk.thirdparty.jackson.core</shadedPattern>
                         </relocation>
                     </relocations>
+                    <filters>
+                        <filter>
+                            <artifact>com.fasterxml.jackson.dataformat:*</artifact>
+                            <excludes>
+                                <!-- Exclude components that require Jackson-databind, because we don't use it. -->
+                                <exclude>com/fasterxml/jackson/dataformat/cbor/databind/**</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
                     <shadedArtifactAttached>false</shadedArtifactAttached>
                     <createDependencyReducedPom>true</createDependencyReducedPom>
                     <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml
@@ -124,7 +133,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>software.amazon.awssdk.thirdparty.dataformat.cbor</Automatic-Module-Name>
+                            <Automatic-Module-Name>software.amazon.awssdk.thirdparty.jackson.dataformat.cbor</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>

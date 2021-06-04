@@ -1,23 +1,42 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package software.amazon.awssdk.protocols.jsoncore;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkProtectedApi;
 import software.amazon.awssdk.protocols.jsoncore.internal.ArrayJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.ArrayJsonNodeBuilder;
 import software.amazon.awssdk.protocols.jsoncore.internal.BooleanJsonNode;
+import software.amazon.awssdk.protocols.jsoncore.internal.EmbeddedObjectJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.NullJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.NumberJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.ObjectJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.ObjectJsonNodeBuilder;
 import software.amazon.awssdk.protocols.jsoncore.internal.StringJsonNode;
-import software.amazon.awssdk.thirdparty.jackson.core.JsonParseException;
-import software.amazon.awssdk.utils.StringInputStream;
 
+/**
+ * A node in a JSON document. Either a number, string, boolean, array, object or null. Also can be an embedded object,
+ * which is a non-standard type used in JSON extensions, like CBOR.
+ *
+ * <p>Created from a JSON document with {@link JsonNodeParser} or directly with static methods like
+ * {@link #numberNode(JsonNumber)} or {@link #stringNode(String)}.
+ *
+ * <p>The type of node can be determined using {@link #type()} or "is" methods like {@link #isNumber()} and
+ * {@link #isString()}</p>. Once the type is determined, the value of the node can be extracted via the "as" methods, like
+ * {@link #asNumber()} and {@link #asString()}.
+ */
 @SdkProtectedApi
 public interface JsonNode {
     Type type();
@@ -46,40 +65,21 @@ public interface JsonNode {
         return false;
     }
 
+    default boolean isEmbeddedObject() {
+        return false;
+    }
+
     JsonNumber asNumber();
 
     String asString();
 
     boolean asBoolean();
 
-    List<JsonNode> asArray();
+    JsonArray asArray();
 
-    Map<String, JsonNode> asObject();
+    JsonObject asObject();
 
-    default Optional<JsonNode> get(String subKey, String... additionalKeys) {
-        if (!isObject()) {
-            return Optional.empty();
-        }
-
-        JsonNode current = asObject().get(subKey);
-        if (current == null) {
-            return Optional.empty();
-        }
-
-        for (String key : additionalKeys) {
-            if (!current.isObject()) {
-                return Optional.empty();
-            }
-
-            current = current.asObject().get(key);
-
-            if (current == null) {
-                return Optional.empty();
-            }
-        }
-
-        return Optional.ofNullable(current);
-    }
+    Object asEmbeddedObject();
 
     static JsonNode nullNode() {
         return NullJsonNode.instance();
@@ -97,12 +97,16 @@ public interface JsonNode {
         return new NumberJsonNode(number);
     }
 
-    static JsonNode arrayNode(List<JsonNode> array) {
-        return ArrayJsonNode.create(array);
+    static JsonNode arrayNode(JsonArray array) {
+        return new ArrayJsonNode(array);
     }
 
-    static JsonNode objectNode(Map<String, JsonNode> object) {
-        return ObjectJsonNode.create(object);
+    static JsonNode objectNode(JsonObject object) {
+        return new ObjectJsonNode(object);
+    }
+
+    static JsonNode embeddedObjectNode(Object embeddedObject) {
+        return new EmbeddedObjectJsonNode(embeddedObject);
     }
 
     static ObjectBuilder objectNodeBuilder() {
@@ -119,7 +123,8 @@ public interface JsonNode {
         BOOLEAN,
         NUMBER,
         ARRAY,
-        OBJECT
+        OBJECT,
+        EMBEDDED_OBJECT
     }
 
     interface ArrayBuilder {

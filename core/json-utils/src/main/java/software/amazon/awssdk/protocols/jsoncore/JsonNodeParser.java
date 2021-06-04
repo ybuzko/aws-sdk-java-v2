@@ -32,14 +32,18 @@ import software.amazon.awssdk.thirdparty.jackson.core.json.JsonReadFeature;
  */
 @SdkProtectedApi
 public final class JsonNodeParser {
-    private static final JsonFactory JSON_FACTORY = JsonFactory.builder()
-                                                               .configure(JsonReadFeature.ALLOW_JAVA_COMMENTS, true)
-                                                               .configure(StreamReadFeature.AUTO_CLOSE_SOURCE, false)
-                                                               .build();
+    public static final JsonFactory DEFAULT_JSON_FACTORY =
+        JsonFactory.builder()
+                   .configure(JsonReadFeature.ALLOW_JAVA_COMMENTS, true)
+                   .configure(StreamReadFeature.AUTO_CLOSE_SOURCE, false)
+                   .build();
+
     private final boolean removeErrorLocations;
+    private final JsonFactory jsonFactory;
 
     private JsonNodeParser(Builder builder) {
         this.removeErrorLocations = builder.removeErrorLocations;
+        this.jsonFactory = builder.jsonFactory;
     }
 
     public static JsonNodeParser create() {
@@ -52,7 +56,8 @@ public final class JsonNodeParser {
 
     public JsonNode parse(InputStream content) {
         return invokeSafely(() -> {
-            try (JsonParser parser = JSON_FACTORY.createParser(content)) {
+            try (JsonParser parser = jsonFactory.createParser(content)
+                                                .configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, false)) {
                 return parse(parser);
             }
         });
@@ -60,7 +65,8 @@ public final class JsonNodeParser {
 
     public JsonNode parse(String content) {
         return invokeSafely(() -> {
-            try (JsonParser parser = JSON_FACTORY.createParser(content)) {
+            try (JsonParser parser = jsonFactory.createParser(content)
+                                                .configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, false)) {
                 return parse(parser);
             }
         });
@@ -140,10 +146,20 @@ public final class JsonNodeParser {
     }
 
     public static final class Builder {
+        private JsonFactory jsonFactory = DEFAULT_JSON_FACTORY;
         private boolean removeErrorLocations = false;
 
         public Builder removeErrorLocations(boolean removeErrorLocations) {
             this.removeErrorLocations = removeErrorLocations;
+            return this;
+        }
+
+        /**
+         * TODO: Recommended to share JsonFactory instances per http://wiki.fasterxml
+         * .com/JacksonBestPracticesPerformance
+         */
+        public Builder jsonFactory(JsonFactory jsonFactory) {
+            this.jsonFactory = jsonFactory;
             return this;
         }
 

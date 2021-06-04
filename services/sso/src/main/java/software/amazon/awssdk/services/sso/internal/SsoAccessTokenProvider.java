@@ -56,7 +56,7 @@ public final class SsoAccessTokenProvider {
 
     private String getTokenFromJson(String json) {
         JsonNode jsonNode = PARSER.parse(json);
-        String expiration = jsonNode.get("expiresAt").map(JsonNode::asString).orElse(null);
+        String expiration = jsonNode.asObject().get("expiresAt").asString();
 
         if (validateToken(expiration)) {
             throw ExpiredTokenException.builder().message("The SSO session associated with this profile has expired or is"
@@ -64,11 +64,10 @@ public final class SsoAccessTokenProvider {
                                                           + " login with the corresponding profile.").build();
         }
 
-        return jsonNode.get("accessToken").map(JsonNode::asString).orElse(null);
+        return jsonNode.asObject().get("accessToken").asString();
     }
 
     private boolean validateToken(String expirationTime) {
-        Validate.notNull(expirationTime, "Expiration time was not available.");
         return Instant.now().isAfter(Instant.parse(expirationTime).minus(15, MINUTES));
     }
 

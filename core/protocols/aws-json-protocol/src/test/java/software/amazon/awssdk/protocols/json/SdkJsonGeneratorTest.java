@@ -19,21 +19,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import org.junit.Before;
 import org.junit.Test;
+import software.amazon.awssdk.protocols.jsoncore.JsonNode;
+import software.amazon.awssdk.protocols.jsoncore.JsonNodeParser;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 import software.amazon.awssdk.utils.BinaryUtils;
 
 public class SdkJsonGeneratorTest {
-
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
     /**
      * Delta for comparing double values
      */
@@ -43,7 +41,7 @@ public class SdkJsonGeneratorTest {
 
     @Before
     public void setup() {
-        jsonGenerator = new SdkJsonGenerator(new JsonFactory(), "application/json");
+        jsonGenerator = new SdkJsonGenerator(JsonFactory.builder().build(), "application/json");
     }
 
     @Test
@@ -56,10 +54,10 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeEndObject();
         JsonNode node = toJsonNode();
         assertTrue(node.isObject());
-        assertEquals("stringVal", node.get("stringProp").textValue());
-        assertEquals(42, node.get("integralProp").longValue());
-        assertEquals(true, node.get("booleanProp").booleanValue());
-        assertEquals(123.456, node.get("doubleProp").doubleValue(), DELTA);
+        assertEquals("stringVal", node.asObject().get("stringProp").asString());
+        assertEquals(42, node.asObject().get("integralProp").asNumber().asLong());
+        assertEquals(true, node.asObject().get("booleanProp").asBoolean());
+        assertEquals(123.456, node.asObject().get("doubleProp").asNumber().asDouble(), DELTA);
     }
 
     @Test
@@ -68,7 +66,7 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeFieldName("longProp").writeValue(Long.MAX_VALUE);
         jsonGenerator.writeEndObject();
         JsonNode node = toJsonNode();
-        assertEquals(Long.MAX_VALUE, node.get("longProp").longValue());
+        assertEquals(Long.MAX_VALUE, node.asObject().get("longProp").asNumber().asLong());
     }
 
     @Test
@@ -78,7 +76,7 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeFieldName("binaryProp").writeValue(ByteBuffer.wrap(data));
         jsonGenerator.writeEndObject();
         JsonNode node = toJsonNode();
-        assertEquals(BinaryUtils.toBase64(data), node.get("binaryProp").textValue());
+        assertEquals(BinaryUtils.toBase64(data), node.asObject().get("binaryProp").asString());
     }
 
     @Test
@@ -88,7 +86,7 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeFieldName("dateProp").writeValue(instant);
         jsonGenerator.writeEndObject();
         JsonNode node = toJsonNode();
-        assertEquals(123.456, node.get("dateProp").doubleValue(), DELTA);
+        assertEquals(123.456, node.asObject().get("dateProp").asNumber().asDouble(), DELTA);
     }
 
     @Test
@@ -100,9 +98,9 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeEndArray();
         JsonNode node = toJsonNode();
         assertTrue(node.isArray());
-        assertEquals("valOne", node.get(0).textValue());
-        assertEquals("valTwo", node.get(1).textValue());
-        assertEquals("valThree", node.get(2).textValue());
+        assertEquals("valOne", node.asArray().get(0).asString());
+        assertEquals("valTwo", node.asArray().get(1).asString());
+        assertEquals("valThree", node.asArray().get(2).asString());
     }
 
     @Test
@@ -113,7 +111,7 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeEndObject();
         jsonGenerator.writeEndArray();
         JsonNode node = toJsonNode();
-        assertEquals("nestedVal", node.get(0).get("nestedProp").textValue());
+        assertEquals("nestedVal", node.asObject().get("nestedProp").asString());
     }
 
     @Test
@@ -132,7 +130,7 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeValue("valThree");
         JsonNode node = toJsonNode();
         assertTrue(node.isArray());
-        assertEquals(3, node.size());
+        assertEquals(3, node.asArray().asList().size());
     }
 
     // See https://forums.aws.amazon.com/thread.jspa?threadID=158756
@@ -175,7 +173,7 @@ public class SdkJsonGeneratorTest {
     }
 
     private JsonNode toJsonNode() throws IOException {
-        return MAPPER.readTree(jsonGenerator.getBytes());
+        return JsonNodeParser.create().parse(new ByteArrayInputStream(jsonGenerator.getBytes()));
     }
 
 }

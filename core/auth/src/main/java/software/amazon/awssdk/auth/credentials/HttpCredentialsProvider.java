@@ -18,6 +18,7 @@ package software.amazon.awssdk.auth.credentials;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkProtectedApi;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -77,11 +78,11 @@ public abstract class HttpCredentialsProvider implements AwsCredentialsProvider,
         try {
             String credentialsResponse = HttpResourcesUtils.instance().readResource(getCredentialsEndpointProvider());
 
-            JsonNode node = SENSITIVE_PARSER.parse(credentialsResponse);
-            JsonNode accessKey = node.get("AccessKeyId").orElse(null);
-            JsonNode secretKey = node.get("SecretAccessKey").orElse(null);
-            JsonNode token = node.get("Token").orElse(null);
-            JsonNode expirationNode = node.get("Expiration").orElse(null);
+            Map<String, JsonNode> node = SENSITIVE_PARSER.parse(credentialsResponse).asObject().asMap();
+            JsonNode accessKey = node.get("AccessKeyId");
+            JsonNode secretKey = node.get("SecretAccessKey");
+            JsonNode token = node.get("Token");
+            JsonNode expirationNode = node.get("Expiration");
 
             Validate.notNull(accessKey, "Failed to load access key.");
             Validate.notNull(secretKey, "Failed to load secret key.");

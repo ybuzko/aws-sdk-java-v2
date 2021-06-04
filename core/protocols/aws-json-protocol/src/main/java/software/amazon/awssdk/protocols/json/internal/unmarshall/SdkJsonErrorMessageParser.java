@@ -18,9 +18,10 @@ package software.amazon.awssdk.protocols.json.internal.unmarshall;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.http.SdkHttpFullResponse;
-import software.amazon.awssdk.protocols.json.internal.dom.SdkJsonNode;
+import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 
 @SdkInternalApi
 public class SdkJsonErrorMessageParser implements ErrorMessageParser {
@@ -50,11 +51,11 @@ public class SdkJsonErrorMessageParser implements ErrorMessageParser {
      * @return Error Code of exceptional response or null if it can't be determined
      */
     @Override
-    public String parseErrorMessage(SdkHttpFullResponse httpResponse, SdkJsonNode jsonNode) {
+    public String parseErrorMessage(SdkHttpFullResponse httpResponse, JsonNode jsonNode) {
         for (String field : errorMessageJsonLocations) {
-            SdkJsonNode value = jsonNode.get(field);
+            JsonNode value = jsonNode.asObject().getOptional(field).orElse(null);
             if (value != null) {
-                return value.asText();
+                return value.asString();
             }
         }
         return null;

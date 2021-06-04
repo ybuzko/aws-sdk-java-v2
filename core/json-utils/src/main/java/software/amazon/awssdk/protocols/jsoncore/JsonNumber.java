@@ -13,14 +13,23 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.protocols.json.internal.unmarshall;
+package software.amazon.awssdk.protocols.jsoncore;
 
-import software.amazon.awssdk.annotations.SdkInternalApi;
-import software.amazon.awssdk.http.SdkHttpFullResponse;
-import software.amazon.awssdk.protocols.jsoncore.JsonNode;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
-@SdkInternalApi
-public interface ErrorMessageParser {
+public interface JsonNumber {
+    boolean isInteger();
+    boolean isFloatingPoint();
 
-    String parseErrorMessage(SdkHttpFullResponse httpResponse, JsonNode jsonNode);
+    BigDecimal asBigDecimal();
+    BigInteger asBigInteger();
+    double asDouble();
+
+    int asInt();
+    long asLong();
+
+    static JsonNumber of(Number number) {
+        return null;
+    }
 }

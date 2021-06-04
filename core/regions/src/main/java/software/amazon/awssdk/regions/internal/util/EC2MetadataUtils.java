@@ -33,7 +33,7 @@ import software.amazon.awssdk.core.SdkSystemSetting;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.exception.SdkServiceException;
 import software.amazon.awssdk.core.internal.util.UserAgentUtils;
-import software.amazon.awssdk.protocols.jsoncore.JsonNode;
+import software.amazon.awssdk.protocols.jsoncore.JsonNodeParser;
 import software.amazon.awssdk.regions.util.HttpResourcesUtils;
 import software.amazon.awssdk.regions.util.ResourcesEndpointProvider;
 
@@ -60,6 +60,7 @@ import software.amazon.awssdk.regions.util.ResourcesEndpointProvider;
 //TODO: cleanup
 @SdkInternalApi
 public final class EC2MetadataUtils {
+    private static final JsonNodeParser JSON_PARSER = JsonNodeParser.create();
 
     /** Default resource path for credentials in the Amazon EC2 Instance Metadata Service. */
     private static final String REGION = "region";
@@ -227,10 +228,10 @@ public final class EC2MetadataUtils {
     static String doGetEC2InstanceRegion(final String json) {
         if (null != json) {
             try {
-                return JsonNode.parse(json)
-                               .get(REGION)
-                               .orElseThrow(() -> new IllegalStateException("EC2 did not return a region"))
-                               .asString();
+                return JSON_PARSER.parse(json)
+                                  .asObject()
+                                  .get(REGION)
+                                  .asString();
             } catch (Exception e) {
                 log.warn("Unable to parse EC2 instance info (" + json + ") : " + e.getMessage(), e);
             }

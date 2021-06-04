@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkPublicApi;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNodeParser;
@@ -135,7 +136,7 @@ public final class ProcessCredentialsProvider implements AwsCredentialsProvider 
             throw new IllegalStateException("Process did not return a JSON object.");
         }
 
-        JsonNode version = credentialsJson.get("Version").orElse(null);
+        JsonNode version = credentialsJson.asObject().getOptional("Version").orElse(null);
         if (version == null || !version.isNumber() || version.asNumber().asInt() != 1) {
             throw new IllegalStateException("Unsupported credential version: " + version);
         }
@@ -177,18 +178,18 @@ public final class ProcessCredentialsProvider implements AwsCredentialsProvider 
      * Get a textual value from a json object, throwing an exception if the node is missing or not textual.
      */
     private String getText(JsonNode jsonObject, String nodeName) {
-        JsonNode subNode = jsonObject.get(nodeName).orElse(null);
+        Optional<JsonNode> subNode = jsonObject.asObject().getOptional(nodeName);
 
-        if (subNode == null) {
+        if (!subNode.isPresent()) {
             return null;
         }
 
-        if (!subNode.isString()) {
+        if (!subNode.get().isString()) {
             throw new IllegalStateException(nodeName + " from credential process should be a string, but was " +
-                                            subNode.type());
+                                            subNode.get().type());
         }
 
-        return subNode.asString();
+        return subNode.get().asString();
     }
 
     /**

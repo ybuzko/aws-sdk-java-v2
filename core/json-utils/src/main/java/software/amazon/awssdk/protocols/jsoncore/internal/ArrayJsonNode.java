@@ -1,30 +1,32 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package software.amazon.awssdk.protocols.jsoncore.internal;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import software.amazon.awssdk.annotations.SdkInternalApi;
+import software.amazon.awssdk.protocols.jsoncore.JsonArray;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
-import software.amazon.awssdk.utils.Validate;
+import software.amazon.awssdk.protocols.jsoncore.JsonObject;
 
 @SdkInternalApi
 public final class ArrayJsonNode implements JsonNode {
-    private final List<JsonNode> value;
+    private final JsonArray value;
 
-    private ArrayJsonNode(List<JsonNode> value) {
+    public ArrayJsonNode(JsonArray value) {
         this.value = value;
-    }
-
-    public static ArrayJsonNode create(List<JsonNode> value) {
-        Validate.notNull(value, "JSON array must not be null");
-        Validate.noNullElements(value, "JSON array must not contain null");
-        return new ArrayJsonNode(new ArrayList<>(value));
-    }
-
-    public static ArrayJsonNode createUnsafe(List<JsonNode> value) {
-        return new ArrayJsonNode(value);
     }
 
     @Override
@@ -53,13 +55,18 @@ public final class ArrayJsonNode implements JsonNode {
     }
 
     @Override
-    public List<JsonNode> asArray() {
-        return Collections.unmodifiableList(value);
+    public JsonArray asArray() {
+        return value;
     }
 
     @Override
-    public Map<String, JsonNode> asObject() {
+    public JsonObject asObject() {
         throw new UnsupportedOperationException("A JSON array cannot be converted to an object.");
+    }
+
+    @Override
+    public Object asEmbeddedObject() {
+        throw new UnsupportedOperationException("A JSON array cannot be converted to an embedded object.");
     }
 
     @Override

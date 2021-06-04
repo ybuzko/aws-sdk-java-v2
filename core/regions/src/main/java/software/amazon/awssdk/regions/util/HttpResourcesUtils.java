@@ -155,11 +155,10 @@ public final class HttpResourcesUtils {
             String errorResponse = IoUtils.toUtf8String(errorStream);
 
             try {
-                responseMessage = JSON_PARSER.parse(errorResponse)
-                                             .get("message")
-                                             .filter(JsonNode::isString)
-                                             .map(JsonNode::asString)
-                                             .orElse(null);
+                JsonNode message = JSON_PARSER.parse(errorResponse).asObject().getOptional("message").orElse(null);
+                if (message != null) {
+                    responseMessage = message.asString();
+                }
             } catch (RuntimeException exception) {
                 log.debug("Unable to parse error stream", exception);
             }

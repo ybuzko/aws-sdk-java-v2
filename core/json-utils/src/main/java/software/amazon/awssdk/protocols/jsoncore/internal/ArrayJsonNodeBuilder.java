@@ -13,42 +13,26 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.protocols.json.internal.dom;
+package software.amazon.awssdk.protocols.jsoncore.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import software.amazon.awssdk.annotations.SdkInternalApi;
+import software.amazon.awssdk.protocols.jsoncore.JsonArray;
+import software.amazon.awssdk.protocols.jsoncore.JsonNode;
+import software.amazon.awssdk.utils.Validate;
 
-/**
- * Represents an explicit JSON null.
- */
 @SdkInternalApi
-public final class SdkNullNode implements SdkJsonNode {
+public class ArrayJsonNodeBuilder implements JsonNode.ArrayBuilder {
+    private final List<JsonNode> nodes = new ArrayList<>();
 
-    private static final SdkNullNode INSTANCE = new SdkNullNode();
-
-    private SdkNullNode() {
+    public ArrayJsonNodeBuilder add(JsonNode value) {
+        Validate.notNull(value, "JSON array entry must not be null");
+        nodes.add(value);
+        return this;
     }
 
-    @Override
-    public boolean isNull() {
-        return true;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof SdkNullNode;
-    }
-
-    @Override
-    public int hashCode() {
-        return 0;
-    }
-
-    @Override
-    public String toString() {
-        return "null";
-    }
-
-    static SdkNullNode instance() {
-        return INSTANCE;
+    public JsonNode build() {
+        return new ArrayJsonNode(JsonArray.create(nodes));
     }
 }
