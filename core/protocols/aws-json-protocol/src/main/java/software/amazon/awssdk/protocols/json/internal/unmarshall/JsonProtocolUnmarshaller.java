@@ -105,7 +105,7 @@ public final class JsonProtocolUnmarshaller {
             return SdkBytes.fromByteArray((byte[]) jsonContent.asEmbeddedObject());
         } else {
             // Otherwise decode the JSON string as Base64
-            return TO_SDK_BYTES.convert(jsonContent.asString(), field);
+            return TO_SDK_BYTES.convert(jsonContent.text(), field);
         }
     }
 
@@ -125,7 +125,7 @@ public final class JsonProtocolUnmarshaller {
         }
         SdkField<Object> valueInfo = field.getTrait(MapTrait.class).valueFieldInfo();
         Map<String, Object> map = new HashMap<>();
-        jsonContent.asObject().asMap().forEach((fieldName, value) -> {
+        jsonContent.asObject().forEach((fieldName, value) -> {
             JsonUnmarshaller<Object> unmarshaller = context.getUnmarshaller(valueInfo.location(), valueInfo.marshallingType());
             map.put(fieldName, unmarshaller.unmarshall(context, value, valueInfo));
         });
@@ -159,7 +159,7 @@ public final class JsonProtocolUnmarshaller {
         public T unmarshall(JsonUnmarshallerContext context,
                             JsonNode jsonContent,
                             SdkField<T> field) {
-            return jsonContent != null && !jsonContent.isNull() ? stringToValue.convert(jsonContent.asString(), field) : null;
+            return jsonContent != null && !jsonContent.isNull() ? stringToValue.convert(jsonContent.text(), field) : null;
         }
     }
 
@@ -221,7 +221,8 @@ public final class JsonProtocolUnmarshaller {
         if (jsonContent == null) {
             return null;
         }
-        return isExplicitPayloadMember(field) ? jsonContent : jsonContent.asObject().get(field.locationName());
+        return isExplicitPayloadMember(field) ? jsonContent : jsonContent.get(field.locationName())
+                                                                         .orElse(null);
     }
 
     /**

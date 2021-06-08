@@ -15,11 +15,11 @@
 
 package software.amazon.awssdk.protocols.jsoncore.internal;
 
+import java.util.List;
+import java.util.Map;
 import software.amazon.awssdk.annotations.SdkInternalApi;
-import software.amazon.awssdk.protocols.jsoncore.JsonArray;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
-import software.amazon.awssdk.protocols.jsoncore.JsonObject;
 
 /**
  * A boolean {@link JsonNode}.
@@ -44,7 +44,7 @@ public final class BooleanJsonNode implements JsonNode {
 
     @Override
     public String asString() {
-        return Boolean.toString(value);
+        throw new UnsupportedOperationException("A JSON boolean cannot be converted to a string.");
     }
 
     @Override
@@ -53,18 +53,23 @@ public final class BooleanJsonNode implements JsonNode {
     }
 
     @Override
-    public JsonArray asArray() {
+    public List<JsonNode> asArray() {
         throw new UnsupportedOperationException("A JSON boolean cannot be converted to an array.");
     }
 
     @Override
-    public JsonObject asObject() {
+    public Map<String, JsonNode> asObject() {
         throw new UnsupportedOperationException("A JSON boolean cannot be converted to an object.");
     }
 
     @Override
     public Object asEmbeddedObject() {
         throw new UnsupportedOperationException("A JSON boolean cannot be converted to an embedded object.");
+    }
+
+    @Override
+    public String text() {
+        return Boolean.toString(value);
     }
 
     @Override

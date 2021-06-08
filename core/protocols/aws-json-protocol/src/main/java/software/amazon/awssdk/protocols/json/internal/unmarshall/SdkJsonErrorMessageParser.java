@@ -18,7 +18,6 @@ package software.amazon.awssdk.protocols.json.internal.unmarshall;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.http.SdkHttpFullResponse;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
@@ -53,9 +52,13 @@ public class SdkJsonErrorMessageParser implements ErrorMessageParser {
     @Override
     public String parseErrorMessage(SdkHttpFullResponse httpResponse, JsonNode jsonNode) {
         for (String field : errorMessageJsonLocations) {
-            JsonNode value = jsonNode.asObject().getOptional(field).orElse(null);
+            if (!jsonNode.isObject()) {
+                continue;
+            }
+
+            String value = jsonNode.get(field).map(JsonNode::text).orElse(null);
             if (value != null) {
-                return value.asString();
+                return value;
             }
         }
         return null;

@@ -24,13 +24,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import software.amazon.awssdk.annotations.SdkProtectedApi;
-import software.amazon.awssdk.protocols.jsoncore.internal.DefaultJsonArray;
-import software.amazon.awssdk.protocols.jsoncore.internal.DefaultJsonObject;
+import software.amazon.awssdk.protocols.jsoncore.internal.ArrayJsonNode;
+import software.amazon.awssdk.protocols.jsoncore.internal.BooleanJsonNode;
+import software.amazon.awssdk.protocols.jsoncore.internal.DefaultJsonNumber;
+import software.amazon.awssdk.protocols.jsoncore.internal.NullJsonNode;
+import software.amazon.awssdk.protocols.jsoncore.internal.NumberJsonNode;
+import software.amazon.awssdk.protocols.jsoncore.internal.ObjectJsonNode;
+import software.amazon.awssdk.protocols.jsoncore.internal.StringJsonNode;
 import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 import software.amazon.awssdk.thirdparty.jackson.core.JsonParseException;
 import software.amazon.awssdk.thirdparty.jackson.core.JsonParser;
 import software.amazon.awssdk.thirdparty.jackson.core.JsonToken;
-import software.amazon.awssdk.thirdparty.jackson.core.StreamReadFeature;
 import software.amazon.awssdk.thirdparty.jackson.core.json.JsonReadFeature;
 
 /**
@@ -140,16 +144,16 @@ public final class JsonNodeParser {
         }
         switch (token) {
             case VALUE_STRING:
-                return JsonNode.stringNode(parser.getText());
+                return new StringJsonNode(parser.getText());
             case VALUE_FALSE:
-                return JsonNode.booleanNode(false);
+                return new BooleanJsonNode(false);
             case VALUE_TRUE:
-                return JsonNode.booleanNode(true);
+                return new BooleanJsonNode(true);
             case VALUE_NULL:
-                return JsonNode.nullNode();
+                return NullJsonNode.instance();
             case VALUE_NUMBER_FLOAT:
             case VALUE_NUMBER_INT:
-                return JsonNode.numberNode(JsonNumber.create(parser.getNumberValue()));
+                return new NumberJsonNode(new DefaultJsonNumber(parser.getNumberValue()));
             case START_OBJECT:
                 return parseObject(parser);
             case START_ARRAY:
@@ -167,7 +171,7 @@ public final class JsonNodeParser {
             object.put(fieldName, parseToken(parser, parser.nextToken()));
             currentToken = parser.nextToken();
         }
-        return JsonNode.objectNode(DefaultJsonObject.createUnsafe(object));
+        return new ObjectJsonNode(object);
     }
 
     private JsonNode parseArray(JsonParser parser) throws IOException {
@@ -177,7 +181,7 @@ public final class JsonNodeParser {
             array.add(parseToken(parser, currentToken));
             currentToken = parser.nextToken();
         }
-        return JsonNode.arrayNode(DefaultJsonArray.createUnsafe(array));
+        return new ArrayJsonNode(array);
     }
 
     /**
@@ -187,7 +191,8 @@ public final class JsonNodeParser {
         private JsonFactory jsonFactory = DEFAULT_JSON_FACTORY;
         private boolean removeErrorLocations = false;
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Whether error locations should be removed if parsing fails. This prevents the content of the JSON from appearing in

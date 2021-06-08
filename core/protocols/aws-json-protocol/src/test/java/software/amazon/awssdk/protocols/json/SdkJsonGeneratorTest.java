@@ -27,7 +27,6 @@ import java.time.Instant;
 import org.junit.Before;
 import org.junit.Test;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
-import software.amazon.awssdk.protocols.jsoncore.JsonNodeParser;
 import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 import software.amazon.awssdk.utils.BinaryUtils;
 
@@ -54,8 +53,8 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeEndObject();
         JsonNode node = toJsonNode();
         assertTrue(node.isObject());
-        assertEquals("stringVal", node.asObject().get("stringProp").asString());
-        assertEquals(42, node.asObject().get("integralProp").asNumber().asLong());
+        assertEquals("stringVal", node.asObject().get("stringProp").text());
+        assertEquals(42, node.asObject().get("integralProp").asNumber().asInt());
         assertEquals(true, node.asObject().get("booleanProp").asBoolean());
         assertEquals(123.456, node.asObject().get("doubleProp").asNumber().asDouble(), DELTA);
     }
@@ -76,7 +75,7 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeFieldName("binaryProp").writeValue(ByteBuffer.wrap(data));
         jsonGenerator.writeEndObject();
         JsonNode node = toJsonNode();
-        assertEquals(BinaryUtils.toBase64(data), node.asObject().get("binaryProp").asString());
+        assertEquals(BinaryUtils.toBase64(data), node.asObject().get("binaryProp").text());
     }
 
     @Test
@@ -98,9 +97,9 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeEndArray();
         JsonNode node = toJsonNode();
         assertTrue(node.isArray());
-        assertEquals("valOne", node.asArray().get(0).asString());
-        assertEquals("valTwo", node.asArray().get(1).asString());
-        assertEquals("valThree", node.asArray().get(2).asString());
+        assertEquals("valOne", node.asArray().get(0).text());
+        assertEquals("valTwo", node.asArray().get(1).text());
+        assertEquals("valThree", node.asArray().get(2).text());
     }
 
     @Test
@@ -111,7 +110,7 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeEndObject();
         jsonGenerator.writeEndArray();
         JsonNode node = toJsonNode();
-        assertEquals("nestedVal", node.asObject().get("nestedProp").asString());
+        assertEquals("nestedVal", node.asArray().get(0).asObject().get("nestedProp").text());
     }
 
     @Test
@@ -130,7 +129,7 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeValue("valThree");
         JsonNode node = toJsonNode();
         assertTrue(node.isArray());
-        assertEquals(3, node.asArray().asList().size());
+        assertEquals(3, node.asArray().size());
     }
 
     // See https://forums.aws.amazon.com/thread.jspa?threadID=158756
@@ -173,7 +172,7 @@ public class SdkJsonGeneratorTest {
     }
 
     private JsonNode toJsonNode() throws IOException {
-        return JsonNodeParser.create().parse(new ByteArrayInputStream(jsonGenerator.getBytes()));
+        return JsonNode.parser().parse(new ByteArrayInputStream(jsonGenerator.getBytes()));
     }
 
 }

@@ -17,7 +17,7 @@ package software.amazon.awssdk.protocols.jsoncore;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import software.amazon.awssdk.protocols.jsoncore.internal.DefaultJsonNumber;
+import software.amazon.awssdk.annotations.SdkProtectedApi;
 
 /**
  * A value in a JSON number node.
@@ -27,6 +27,7 @@ import software.amazon.awssdk.protocols.jsoncore.internal.DefaultJsonNumber;
  *
  * <p>The numeric value can be extracted via "as" methods, like {@link #asBigDecimal()} and {@link #asBigInteger()}</p>.
  */
+@SdkProtectedApi
 public interface JsonNumber {
     /**
      * Returns true if this number is a whole number without a decimal component. The value can be extracted via {@link #asInt()},
@@ -70,11 +71,4 @@ public interface JsonNumber {
      * is smaller than can fit into an int, {@link Integer#MIN_VALUE} is used.
      */
     int asInt();
-
-    /**
-     * Create a {@link JsonNumber} based on the provided {@link Number}.
-     */
-    static JsonNumber create(Number number) {
-        return new DefaultJsonNumber(number);
-    }
 }

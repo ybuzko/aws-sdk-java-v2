@@ -29,7 +29,6 @@ import software.amazon.awssdk.protocols.jsoncore.JsonNodeParser;
 import software.amazon.awssdk.services.sso.auth.ExpiredTokenException;
 import software.amazon.awssdk.services.sso.auth.SsoCredentialsProvider;
 import software.amazon.awssdk.utils.IoUtils;
-import software.amazon.awssdk.utils.Validate;
 
 /**
  * Resolve the access token from the cached token file. If the token has expired then throw out an exception to ask the users to
@@ -56,7 +55,7 @@ public final class SsoAccessTokenProvider {
 
     private String getTokenFromJson(String json) {
         JsonNode jsonNode = PARSER.parse(json);
-        String expiration = jsonNode.asObject().get("expiresAt").asString();
+        String expiration = jsonNode.get("expiresAt").map(JsonNode::text).orElse(null);
 
         if (validateToken(expiration)) {
             throw ExpiredTokenException.builder().message("The SSO session associated with this profile has expired or is"
@@ -64,11 +63,11 @@ public final class SsoAccessTokenProvider {
                                                           + " login with the corresponding profile.").build();
         }
 
-        return jsonNode.asObject().get("accessToken").asString();
+        return jsonNode.asObject().get("accessToken").text();
     }
 
     private boolean validateToken(String expirationTime) {
-        return Instant.now().isAfter(Instant.parse(expirationTime).minus(15, MINUTES));
+        return expirationTime != null && Instant.now().isAfter(Instant.parse(expirationTime).minus(15, MINUTES));
     }
 
 }

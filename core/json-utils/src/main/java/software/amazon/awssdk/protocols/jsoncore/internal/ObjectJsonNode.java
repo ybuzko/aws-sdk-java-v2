@@ -15,22 +15,21 @@
 
 package software.amazon.awssdk.protocols.jsoncore.internal;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkInternalApi;
-import software.amazon.awssdk.protocols.jsoncore.JsonArray;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
-import software.amazon.awssdk.protocols.jsoncore.JsonObject;
-import software.amazon.awssdk.utils.Validate;
 
 /**
  * An object {@link JsonNode}.
  */
 @SdkInternalApi
 public final class ObjectJsonNode implements JsonNode {
-    private final JsonObject value;
+    private final Map<String, JsonNode> value;
 
-    public ObjectJsonNode(JsonObject value) {
-        Validate.paramNotNull(value, "value");
+    public ObjectJsonNode(Map<String, JsonNode> value) {
         this.value = value;
     }
 
@@ -55,12 +54,12 @@ public final class ObjectJsonNode implements JsonNode {
     }
 
     @Override
-    public JsonArray asArray() {
+    public List<JsonNode> asArray() {
         throw new UnsupportedOperationException("A JSON object cannot be converted to an array.");
     }
 
     @Override
-    public JsonObject asObject() {
+    public Map<String, JsonNode> asObject() {
         return value;
     }
 
@@ -70,7 +69,22 @@ public final class ObjectJsonNode implements JsonNode {
     }
 
     @Override
+    public String text() {
+        return null;
+    }
+
+    @Override
+    public Optional<JsonNode> get(String child) {
+        return Optional.ofNullable(value.get(child));
+    }
+
+    @Override
     public String toString() {
-        return value.toString();
+        StringBuilder output = new StringBuilder();
+        output.append("{");
+        value.forEach((k, v) -> output.append("\"").append(k).append("\": ")
+                                      .append(v.toString()).append(","));
+        output.setCharAt(output.length() - 1, '}');
+        return output.toString();
     }
 }

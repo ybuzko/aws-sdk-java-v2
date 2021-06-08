@@ -33,6 +33,7 @@ import software.amazon.awssdk.core.SdkSystemSetting;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.exception.SdkServiceException;
 import software.amazon.awssdk.core.internal.util.UserAgentUtils;
+import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNodeParser;
 import software.amazon.awssdk.regions.util.HttpResourcesUtils;
 import software.amazon.awssdk.regions.util.ResourcesEndpointProvider;
@@ -60,7 +61,7 @@ import software.amazon.awssdk.regions.util.ResourcesEndpointProvider;
 //TODO: cleanup
 @SdkInternalApi
 public final class EC2MetadataUtils {
-    private static final JsonNodeParser JSON_PARSER = JsonNodeParser.create();
+    private static final JsonNodeParser JSON_PARSER = JsonNode.parser();
 
     /** Default resource path for credentials in the Amazon EC2 Instance Metadata Service. */
     private static final String REGION = "region";
@@ -229,9 +230,9 @@ public final class EC2MetadataUtils {
         if (null != json) {
             try {
                 return JSON_PARSER.parse(json)
-                                  .asObject()
                                   .get(REGION)
-                                  .asString();
+                                  .map(JsonNode::text)
+                                  .orElseThrow(() -> new IllegalStateException("Region not included in metadata."));
             } catch (Exception e) {
                 log.warn("Unable to parse EC2 instance info (" + json + ") : " + e.getMessage(), e);
             }
@@ -386,41 +387,6 @@ public final class EC2MetadataUtils {
         } catch (RuntimeException e) {
             return null;
         }
-    }
-
-    /**
-     * Information about the last time the instance profile was updated,
-     * including the instance's LastUpdated date, InstanceProfileArn, and
-     * InstanceProfileId.
-     */
-    public static class IamInfo {
-        public String code;
-        public String message;
-        public String lastUpdated;
-        public String instanceProfileArn;
-        public String instanceProfileId;
-    }
-
-    /**
-     * The temporary security credentials (AccessKeyId, SecretAccessKey,
-     * SessionToken, and Expiration) associated with the IAM role.
-     */
-    public static class IamSecurityCredential {
-        public String code;
-        public String message;
-        public String lastUpdated;
-        public String type;
-        public String accessKeyId;
-        public String secretAccessKey;
-        public String token;
-        public String expiration;
-
-        /**
-         * @deprecated because it is spelled incorrectly
-         * @see #accessKeyId
-         */
-        @Deprecated
-        public String secretAcessKey;
     }
 
     /**

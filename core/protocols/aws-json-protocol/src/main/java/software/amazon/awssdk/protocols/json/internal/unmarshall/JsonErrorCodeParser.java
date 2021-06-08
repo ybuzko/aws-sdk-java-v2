@@ -18,7 +18,6 @@ package software.amazon.awssdk.protocols.json.internal.unmarshall;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,11 +119,11 @@ public class JsonErrorCodeParser implements ErrorCodeParser {
         if (jsonContents == null) {
             return null;
         }
-        JsonNode errorCodeField = jsonContents.asObject().getOptional(errorCodeFieldName).orElse(null);
+        JsonNode errorCodeField = jsonContents.get(errorCodeFieldName).orElse(null);
         if (errorCodeField == null) {
             return null;
         }
-        String code = errorCodeField.asString();
+        String code = errorCodeField.text();
         int separator = code.lastIndexOf("#");
         return code.substring(separator + 1);
     }

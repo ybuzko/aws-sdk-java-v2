@@ -15,22 +15,21 @@
 
 package software.amazon.awssdk.protocols.jsoncore.internal;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkInternalApi;
-import software.amazon.awssdk.protocols.jsoncore.JsonArray;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
-import software.amazon.awssdk.protocols.jsoncore.JsonObject;
-import software.amazon.awssdk.utils.Validate;
 
 /**
  * An array {@link JsonNode}.
  */
 @SdkInternalApi
 public final class ArrayJsonNode implements JsonNode {
-    private final JsonArray value;
+    private final List<JsonNode> value;
 
-    public ArrayJsonNode(JsonArray value) {
-        Validate.paramNotNull(value, "value");
+    public ArrayJsonNode(List<JsonNode> value) {
         this.value = value;
     }
 
@@ -55,18 +54,28 @@ public final class ArrayJsonNode implements JsonNode {
     }
 
     @Override
-    public JsonArray asArray() {
+    public List<JsonNode> asArray() {
         return value;
     }
 
     @Override
-    public JsonObject asObject() {
+    public Map<String, JsonNode> asObject() {
         throw new UnsupportedOperationException("A JSON array cannot be converted to an object.");
     }
 
     @Override
     public Object asEmbeddedObject() {
         throw new UnsupportedOperationException("A JSON array cannot be converted to an embedded object.");
+    }
+
+    @Override
+    public String text() {
+        return null;
+    }
+
+    @Override
+    public Optional<JsonNode> get(int child) {
+        return Optional.ofNullable(value.get(child));
     }
 
     @Override

@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.annotations.SdkProtectedApi;
@@ -33,7 +34,7 @@ import software.amazon.awssdk.utils.IoUtils;
 public final class HttpResourcesUtils {
 
     private static final Logger log = LoggerFactory.getLogger(HttpResourcesUtils.class);
-    private static final JsonNodeParser JSON_PARSER = JsonNodeParser.create();
+    private static final JsonNodeParser JSON_PARSER = JsonNode.parser();
 
     private static volatile HttpResourcesUtils instance;
 
@@ -155,19 +156,18 @@ public final class HttpResourcesUtils {
             String errorResponse = IoUtils.toUtf8String(errorStream);
 
             try {
-                JsonNode message = JSON_PARSER.parse(errorResponse).asObject().getOptional("message").orElse(null);
-                if (message != null) {
-                    responseMessage = message.asString();
+                Optional<JsonNode> message = JSON_PARSER.parse(errorResponse).get("message");
+                if (message.isPresent()) {
+                    responseMessage = message.get().text();
                 }
             } catch (RuntimeException exception) {
                 log.debug("Unable to parse error stream", exception);
             }
         }
 
-        SdkServiceException exception = SdkServiceException.builder()
-                                                           .message(responseMessage)
-                                                           .statusCode(statusCode)
-                                                           .build();
-        throw exception;
+        throw SdkServiceException.builder()
+                                 .message(responseMessage)
+                                 .statusCode(statusCode)
+                                 .build();
     }
 }

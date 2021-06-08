@@ -42,7 +42,7 @@ public class AwsJsonErrorMessageParserTest {
 
     @Before
     public void setup() {
-        jsonParser = JsonNodeParser.create();
+        jsonParser = JsonNode.parser();
         responseBuilder = ValidSdkObjects.sdkHttpFullResponse();
     }
 

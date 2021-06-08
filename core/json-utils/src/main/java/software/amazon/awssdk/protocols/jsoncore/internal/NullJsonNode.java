@@ -15,11 +15,11 @@
 
 package software.amazon.awssdk.protocols.jsoncore.internal;
 
+import java.util.List;
+import java.util.Map;
 import software.amazon.awssdk.annotations.SdkInternalApi;
-import software.amazon.awssdk.protocols.jsoncore.JsonArray;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
-import software.amazon.awssdk.protocols.jsoncore.JsonObject;
 
 /**
  * A null {@link JsonNode}.
@@ -28,11 +28,12 @@ import software.amazon.awssdk.protocols.jsoncore.JsonObject;
 public final class NullJsonNode implements JsonNode {
     private static final NullJsonNode INSTANCE = new NullJsonNode();
 
+    private NullJsonNode() {
+    }
+
     public static NullJsonNode instance() {
         return INSTANCE;
     }
-
-    private NullJsonNode() {}
 
     @Override
     public boolean isNull() {
@@ -55,18 +56,23 @@ public final class NullJsonNode implements JsonNode {
     }
 
     @Override
-    public JsonArray asArray() {
+    public List<JsonNode> asArray() {
         throw new UnsupportedOperationException("A JSON null cannot be converted to an array.");
     }
 
     @Override
-    public JsonObject asObject() {
+    public Map<String, JsonNode> asObject() {
         throw new UnsupportedOperationException("A JSON null cannot be converted to an object.");
     }
 
     @Override
     public Object asEmbeddedObject() {
         throw new UnsupportedOperationException("A JSON null cannot be converted to an embedded object.");
+    }
+
+    @Override
+    public String text() {
+        return null;
     }
 
     @Override

@@ -78,7 +78,7 @@ public abstract class HttpCredentialsProvider implements AwsCredentialsProvider,
         try {
             String credentialsResponse = HttpResourcesUtils.instance().readResource(getCredentialsEndpointProvider());
 
-            Map<String, JsonNode> node = SENSITIVE_PARSER.parse(credentialsResponse).asObject().asMap();
+            Map<String, JsonNode> node = SENSITIVE_PARSER.parse(credentialsResponse).asObject();
             JsonNode accessKey = node.get("AccessKeyId");
             JsonNode secretKey = node.get("SecretAccessKey");
             JsonNode token = node.get("Token");
@@ -88,8 +88,8 @@ public abstract class HttpCredentialsProvider implements AwsCredentialsProvider,
             Validate.notNull(secretKey, "Failed to load secret key.");
 
             AwsCredentials credentials =
-                token == null ? AwsBasicCredentials.create(accessKey.asString(), secretKey.asString())
-                              : AwsSessionCredentials.create(accessKey.asString(), secretKey.asString(), token.asString());
+                token == null ? AwsBasicCredentials.create(accessKey.text(), secretKey.text())
+                              : AwsSessionCredentials.create(accessKey.text(), secretKey.text(), token.text());
 
             Instant expiration = getExpiration(expirationNode).orElse(null);
             if (expiration != null && Instant.now().isAfter(expiration)) {
@@ -114,7 +114,7 @@ public abstract class HttpCredentialsProvider implements AwsCredentialsProvider,
     private Optional<Instant> getExpiration(JsonNode expirationNode) {
         return Optional.ofNullable(expirationNode).map(node -> {
             // Convert the expirationNode string to ISO-8601 format.
-            String expirationValue = node.asString().replaceAll("\\+0000$", "Z");
+            String expirationValue = node.text().replaceAll("\\+0000$", "Z");
 
             try {
                 return DateUtils.parseIso8601Date(expirationValue);
