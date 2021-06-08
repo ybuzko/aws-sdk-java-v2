@@ -17,12 +17,14 @@ package software.amazon.awssdk.protocols.jsoncore.internal;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
 import software.amazon.awssdk.utils.Validate;
 
 /**
  * Default implementation of {@link JsonNumber}.
  */
+@SdkInternalApi
 public class DefaultJsonNumber implements JsonNumber {
     private final Number number;
 

@@ -23,7 +23,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkPublicApi;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNodeParser;
@@ -175,13 +174,10 @@ public final class ProcessCredentialsProvider implements AwsCredentialsProvider 
     }
 
     /**
-     * Get a textual value from a json object, throwing an exception if the node is missing or not textual.
+     * Get a textual value from a json object.
      */
     private String getText(JsonNode jsonObject, String nodeName) {
-        return jsonObject.get(nodeName)
-                         .map(JsonNode::text)
-                         .orElseThrow(() -> new IllegalStateException(nodeName + " does not exist."));
-
+        return jsonObject.get(nodeName).map(JsonNode::text).orElse(null);
     }
 
     /**

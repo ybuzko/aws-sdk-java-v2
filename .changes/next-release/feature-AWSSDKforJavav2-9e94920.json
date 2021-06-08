@@ -1,0 +1,6 @@
+{
+    "category": "AWS SDK for Java v2", 
+    "contributor": "", 
+    "type": "feature", 
+    "description": "Removed Jackson as an SDK dependency. It is still used internally, but is not exposed to make it easier for the SDK to upgrade the Jackson version in the future. This required changing cross-module APIs, so users will need to make sure that they upgrade all SDK packages to this version, not just the core packages. If they try to mix old and new SDK packages on the classpath, they will see class-not-found and method-not-found errors. No public APIs have changed as part of this release."
+}
