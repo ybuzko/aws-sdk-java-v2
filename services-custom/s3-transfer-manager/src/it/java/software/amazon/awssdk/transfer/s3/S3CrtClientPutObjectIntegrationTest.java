@@ -44,7 +44,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.testutils.RandomTempFile;
 
 public class S3CrtClientPutObjectIntegrationTest extends S3IntegrationTestBase {
-    private static final String TEST_BUCKET = temporaryBucketName(S3CrtClientPutObjectIntegrationTest.class);
+    private static final String TEST_BUCKET = temporaryBucketName("crt-put");
     private static final String TEST_KEY = "8mib_file.dat";
     private static final int OBJ_SIZE = 8 * 1024 * 1024;
 

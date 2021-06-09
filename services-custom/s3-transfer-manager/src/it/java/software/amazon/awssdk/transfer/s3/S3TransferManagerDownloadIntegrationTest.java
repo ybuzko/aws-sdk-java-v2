@@ -30,7 +30,7 @@ import software.amazon.awssdk.testutils.RandomTempFile;
 import software.amazon.awssdk.utils.Md5Utils;
 
 public class S3TransferManagerDownloadIntegrationTest extends S3IntegrationTestBase {
-    private static final String BUCKET = temporaryBucketName(S3TransferManagerDownloadIntegrationTest.class);
+    private static final String BUCKET = temporaryBucketName("tmdownload");
     private static final String KEY = "key";
     private static S3TransferManager transferManager;
     private static File file;
