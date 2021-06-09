@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
-import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
 
 /**
  * An array {@link JsonNode}.
@@ -39,7 +38,7 @@ public final class ArrayJsonNode implements JsonNode {
     }
 
     @Override
-    public JsonNumber asNumber() {
+    public String asNumber() {
         throw new UnsupportedOperationException("A JSON array cannot be converted to a number.");
     }
 

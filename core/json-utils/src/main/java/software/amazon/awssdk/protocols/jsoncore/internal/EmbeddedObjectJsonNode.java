@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
-import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
 import software.amazon.awssdk.utils.Validate;
 
 /**
@@ -40,7 +39,7 @@ public final class EmbeddedObjectJsonNode implements JsonNode {
     }
 
     @Override
-    public JsonNumber asNumber() {
+    public String asNumber() {
         throw new UnsupportedOperationException("A JSON embedded object cannot be converted to a number.");
     }
 

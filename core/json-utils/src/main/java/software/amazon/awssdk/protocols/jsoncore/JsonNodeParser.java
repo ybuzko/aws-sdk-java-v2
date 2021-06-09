@@ -26,7 +26,6 @@ import java.util.Map;
 import software.amazon.awssdk.annotations.SdkProtectedApi;
 import software.amazon.awssdk.protocols.jsoncore.internal.ArrayJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.BooleanJsonNode;
-import software.amazon.awssdk.protocols.jsoncore.internal.DefaultJsonNumber;
 import software.amazon.awssdk.protocols.jsoncore.internal.NullJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.NumberJsonNode;
 import software.amazon.awssdk.protocols.jsoncore.internal.ObjectJsonNode;
@@ -153,7 +152,7 @@ public final class JsonNodeParser {
                 return NullJsonNode.instance();
             case VALUE_NUMBER_FLOAT:
             case VALUE_NUMBER_INT:
-                return new NumberJsonNode(new DefaultJsonNumber(parser.getNumberValue()));
+                return new NumberJsonNode(parser.getText());
             case START_OBJECT:
                 return parseObject(parser);
             case START_ARRAY:

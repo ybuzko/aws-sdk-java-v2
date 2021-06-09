@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
-import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
 
 /**
  * A null {@link JsonNode}.
@@ -41,7 +40,7 @@ public final class NullJsonNode implements JsonNode {
     }
 
     @Override
-    public JsonNumber asNumber() {
+    public String asNumber() {
         throw new UnsupportedOperationException("A JSON null cannot be converted to a number.");
     }
 

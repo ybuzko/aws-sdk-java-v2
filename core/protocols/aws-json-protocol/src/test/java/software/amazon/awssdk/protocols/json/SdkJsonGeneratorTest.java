@@ -54,9 +54,9 @@ public class SdkJsonGeneratorTest {
         JsonNode node = toJsonNode();
         assertTrue(node.isObject());
         assertEquals("stringVal", node.asObject().get("stringProp").text());
-        assertEquals(42, node.asObject().get("integralProp").asNumber().asInt());
+        assertEquals("42", node.asObject().get("integralProp").asNumber());
         assertEquals(true, node.asObject().get("booleanProp").asBoolean());
-        assertEquals(123.456, node.asObject().get("doubleProp").asNumber().asDouble(), DELTA);
+        assertEquals(123.456, Double.parseDouble(node.asObject().get("doubleProp").asNumber()), DELTA);
     }
 
     @Test
@@ -65,7 +65,7 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeFieldName("longProp").writeValue(Long.MAX_VALUE);
         jsonGenerator.writeEndObject();
         JsonNode node = toJsonNode();
-        assertEquals(Long.MAX_VALUE, node.asObject().get("longProp").asNumber().asLong());
+        assertEquals(Long.toString(Long.MAX_VALUE), node.asObject().get("longProp").asNumber());
     }
 
     @Test
@@ -85,7 +85,7 @@ public class SdkJsonGeneratorTest {
         jsonGenerator.writeFieldName("dateProp").writeValue(instant);
         jsonGenerator.writeEndObject();
         JsonNode node = toJsonNode();
-        assertEquals(123.456, node.asObject().get("dateProp").asNumber().asDouble(), DELTA);
+        assertEquals(123.456, Double.parseDouble(node.asObject().get("dateProp").asNumber()), DELTA);
     }
 
     @Test

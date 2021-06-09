@@ -127,7 +127,7 @@ public interface JsonNode {
      *
      * @see #text()
      */
-    JsonNumber asNumber();
+    String asNumber();
 
     /**
      * When {@link #isString()}, is true, this returns the string associated with this node. This will throw an exception if

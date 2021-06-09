@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
-import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
 
 /**
  * An object {@link JsonNode}.
@@ -39,7 +38,7 @@ public final class ObjectJsonNode implements JsonNode {
     }
 
     @Override
-    public JsonNumber asNumber() {
+    public String asNumber() {
         throw new UnsupportedOperationException("A JSON object cannot be converted to a number.");
     }
 
@@ -80,6 +79,10 @@ public final class ObjectJsonNode implements JsonNode {
 
     @Override
     public String toString() {
+        if (value.isEmpty()) {
+            return "{}";
+        }
+
         StringBuilder output = new StringBuilder();
         output.append("{");
         value.forEach((k, v) -> output.append("\"").append(k).append("\": ")

@@ -1,14 +1,29 @@
 package software.amazon.awssdk.protocols.jsoncore;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import org.assertj.core.data.Offset;
 import org.junit.Test;
+import software.amazon.awssdk.utils.StringInputStream;
 
 public class JsonNodeTest {
     private static final JsonNodeParser PARSER = JsonNode.parser();
+
+    @Test
+    public void parseString_works() {
+        assertThat(PARSER.parse("{}").isObject()).isTrue();
+    }
+
+    @Test
+    public void parseInputStream_works() {
+        assertThat(PARSER.parse(new StringInputStream("{}")).isObject()).isTrue();
+    }
+
+    @Test
+    public void parseByteArray_works() {
+        assertThat(PARSER.parse("{}".getBytes(UTF_8)).isObject()).isTrue();
+    }
 
     @Test
     public void parseNull_givesCorrectType() {
@@ -21,6 +36,13 @@ public class JsonNodeTest {
         assertThat(node.isArray()).isFalse();
         assertThat(node.isObject()).isFalse();
         assertThat(node.isEmbeddedObject()).isFalse();
+
+        assertThatThrownBy(node::asBoolean).isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(node::asNumber).isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(node::asString).isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(node::asArray).isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(node::asObject).isInstanceOf(UnsupportedOperationException.class);
+        assertThatThrownBy(node::asEmbeddedObject).isInstanceOf(UnsupportedOperationException.class);
     }
 
     @Test
@@ -29,6 +51,7 @@ public class JsonNodeTest {
         for (String option : options) {
             JsonNode node = PARSER.parse(option);
 
+
             assertThat(node.isNull()).isFalse();
             assertThat(node.isBoolean()).isTrue();
             assertThat(node.isNumber()).isFalse();
@@ -36,6 +59,12 @@ public class JsonNodeTest {
             assertThat(node.isArray()).isFalse();
             assertThat(node.isObject()).isFalse();
             assertThat(node.isEmbeddedObject()).isFalse();
+
+            assertThatThrownBy(node::asNumber).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asString).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asArray).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asObject).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asEmbeddedObject).isInstanceOf(UnsupportedOperationException.class);
         }
     }
 
@@ -52,6 +81,12 @@ public class JsonNodeTest {
             assertThat(node.isArray()).isFalse();
             assertThat(node.isObject()).isFalse();
             assertThat(node.isEmbeddedObject()).isFalse();
+
+            assertThatThrownBy(node::asBoolean).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asString).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asArray).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asObject).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asEmbeddedObject).isInstanceOf(UnsupportedOperationException.class);
         }
     }
 
@@ -68,6 +103,12 @@ public class JsonNodeTest {
             assertThat(node.isArray()).isFalse();
             assertThat(node.isObject()).isFalse();
             assertThat(node.isEmbeddedObject()).isFalse();
+
+            assertThatThrownBy(node::asBoolean).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asNumber).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asArray).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asObject).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asEmbeddedObject).isInstanceOf(UnsupportedOperationException.class);
         }
     }
 
@@ -84,6 +125,12 @@ public class JsonNodeTest {
             assertThat(node.isArray()).isTrue();
             assertThat(node.isObject()).isFalse();
             assertThat(node.isEmbeddedObject()).isFalse();
+
+            assertThatThrownBy(node::asBoolean).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asNumber).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asString).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asObject).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asEmbeddedObject).isInstanceOf(UnsupportedOperationException.class);
         }
     }
 
@@ -100,6 +147,12 @@ public class JsonNodeTest {
             assertThat(node.isArray()).isFalse();
             assertThat(node.isObject()).isTrue();
             assertThat(node.isEmbeddedObject()).isFalse();
+
+            assertThatThrownBy(node::asBoolean).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asNumber).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asString).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asArray).isInstanceOf(UnsupportedOperationException.class);
+            assertThatThrownBy(node::asEmbeddedObject).isInstanceOf(UnsupportedOperationException.class);
         }
     }
 
@@ -110,52 +163,106 @@ public class JsonNodeTest {
     }
 
     @Test
-    public void parseNumber_floatingPoint_givesCorrectValue() {
-        JsonNumber floatingPoint = PARSER.parse("5.9").asNumber();
-
-        assertThat(floatingPoint.isFloatingPoint()).isTrue();
-        assertThat(floatingPoint.isInteger()).isFalse();
-
-        assertThat(floatingPoint.asBigInteger()).isEqualTo(new BigInteger("5"));
-        assertThat(floatingPoint.asLong()).isEqualTo(5L);
-        assertThat(floatingPoint.asInt()).isEqualTo(5);
-        assertThat(floatingPoint.asBigDecimal()).isEqualTo(new BigDecimal("5.9"));
-        assertThat(floatingPoint.asDouble()).isEqualTo(5.9, Offset.offset(0.1));
+    public void parseNumber_givesCorrectValue() {
+        assertThat(PARSER.parse("0").asNumber()).isEqualTo("0");
+        assertThat(PARSER.parse("-1").asNumber()).isEqualTo("-1");
+        assertThat(PARSER.parse("1").asNumber()).isEqualTo("1");
+        assertThat(PARSER.parse("1e10000").asNumber()).isEqualTo("1e10000");
+        assertThat(PARSER.parse("-1e10000").asNumber()).isEqualTo("-1e10000");
+        assertThat(PARSER.parse("1.23").asNumber()).isEqualTo("1.23");
+        assertThat(PARSER.parse("-1.23").asNumber()).isEqualTo("-1.23");
     }
 
     @Test
-    public void parseNumber_integer_givesCorrectValue() {
-        JsonNumber floatingPoint = PARSER.parse("5").asNumber();
-
-        assertThat(floatingPoint.isFloatingPoint()).isFalse();
-        assertThat(floatingPoint.isInteger()).isTrue();
-
-        assertThat(floatingPoint.asBigInteger()).isEqualTo(new BigInteger("5"));
-        assertThat(floatingPoint.asLong()).isEqualTo(5L);
-        assertThat(floatingPoint.asInt()).isEqualTo(5);
-        assertThat(floatingPoint.asBigDecimal()).isEqualTo(new BigDecimal("5"));
-        assertThat(floatingPoint.asDouble()).isEqualTo(5, Offset.offset(0.1));
+    public void parseString_givesCorrectValue() {
+        assertThat(PARSER.parse("\"foo\"").asString()).isEqualTo("foo");
+        assertThat(PARSER.parse("\"\"").asString()).isEqualTo("");
+        assertThat(PARSER.parse("\"&nbsp;\"").asString()).isEqualTo("&nbsp;");
+        assertThat(PARSER.parse("\"%20\"").asString()).isEqualTo("%20");
+        assertThat(PARSER.parse("\"\\\"\"").asString()).isEqualTo("\"");
+        assertThat(PARSER.parse("\" \"").asString()).isEqualTo(" ");
     }
 
     @Test
-    public void parseNumber_veryNegative_givesCorrectValue() {
-        BigInteger veryNegativeValue = new BigInteger(Long.toString(Long.MIN_VALUE));
-        BigInteger evenMoreNegativeValue = veryNegativeValue.subtract(BigInteger.ONE);
-
-        JsonNumber negativeInteger = PARSER.parse(evenMoreNegativeValue.toString()).asNumber();
-
-        assertThat(negativeInteger.isFloatingPoint()).isFalse();
-        assertThat(negativeInteger.isInteger()).isTrue();
-
-        assertThat(negativeInteger.asBigInteger()).isEqualTo(evenMoreNegativeValue);
-        assertThat(negativeInteger.asLong()).isEqualTo(Long.MIN_VALUE);
-        assertThat(negativeInteger.asInt()).isEqualTo(Integer.MIN_VALUE);
-        assertThat(negativeInteger.asBigDecimal()).isEqualTo(new BigDecimal(evenMoreNegativeValue.toString()));
-        assertThat(negativeInteger.asDouble()).isEqualTo(evenMoreNegativeValue.doubleValue(), Offset.offset(1D));
+    public void parseArray_givesCorrectValue() {
+        assertThat(PARSER.parse("[]").asArray()).isEmpty();
+        assertThat(PARSER.parse("[null, 1]").asArray()).satisfies(list -> {
+            assertThat(list).hasSize(2);
+            assertThat(list.get(0).isNull()).isTrue();
+            assertThat(list.get(1).asNumber()).isEqualTo("1");
+        });
     }
 
     @Test
-    public void testToString() {
-        // TODO
+    public void parseObject_givesCorrectValue() {
+        assertThat(PARSER.parse("{}").asObject()).isEmpty();
+        assertThat(PARSER.parse("{\"foo\": \"bar\", \"baz\": 0}").asObject()).satisfies(map -> {
+            assertThat(map).hasSize(2);
+            assertThat(map.get("foo").asString()).isEqualTo("bar");
+            assertThat(map.get("baz").asNumber()).isEqualTo("0");
+        });
+    }
+
+    @Test
+    public void text_returnsContent() {
+        assertThat(PARSER.parse("null").text()).isEqualTo(null);
+        assertThat(PARSER.parse("0").text()).isEqualTo("0");
+        assertThat(PARSER.parse("\"foo\"").text()).isEqualTo("foo");
+        assertThat(PARSER.parse("true").text()).isEqualTo("true");
+        assertThat(PARSER.parse("[]").text()).isEqualTo(null);
+        assertThat(PARSER.parse("{}").text()).isEqualTo(null);
+    }
+
+    @Test
+    public void getString_returnsContent() {
+        assertThat(PARSER.parse("null").get("")).isEmpty();
+        assertThat(PARSER.parse("0").get("")).isEmpty();
+        assertThat(PARSER.parse("\"foo\"").get("")).isEmpty();
+        assertThat(PARSER.parse("true").get("")).isEmpty();
+        assertThat(PARSER.parse("[]").get("")).isEmpty();
+        assertThat(PARSER.parse("{\"\":0}").get("")).map(JsonNode::asNumber).hasValue("0");
+    }
+
+    @Test
+    public void getArray_returnsContent() {
+        assertThat(PARSER.parse("null").get(0)).isEmpty();
+        assertThat(PARSER.parse("0").get(0)).isEmpty();
+        assertThat(PARSER.parse("\"foo\"").get(0)).isEmpty();
+        assertThat(PARSER.parse("true").get(0)).isEmpty();
+        assertThat(PARSER.parse("[null]").get(0)).map(JsonNode::isNull).hasValue(true);
+        assertThat(PARSER.parse("{}").get("")).isEmpty();
+    }
+
+    @Test
+    public void toStringIsCorrect() {
+        String input = "{"
+                       + "\"1\": \"2\","
+                       + "\"3\": 4,"
+                       + "\"5\": null,"
+                       + "\"6\": false,"
+                       + "\"7\": [[{}]],"
+                       + "\"8\": \"\\\\n\\\"\""
+                       + "}";
+        assertThat(PARSER.parse(input).toString()).isEqualTo(input);
+    }
+
+    @Test
+    public void exceptionsIncludeErrorLocation() {
+        assertThatThrownBy(() -> PARSER.parse("{{foo}")).hasMessageContaining("foo");
+    }
+
+    @Test
+    public void removeErrorLocations_removesErrorLocations() {
+        assertThatThrownBy(() -> JsonNode.parserBuilder()
+                                         .removeErrorLocations(true)
+                                         .build()
+                                         .parse("{{foo}"))
+            .satisfies(exception -> {
+                Throwable cause = exception;
+                while (cause != null) {
+                    assertThat(cause.getMessage()).doesNotContain("foo");
+                    cause = cause.getCause();
+                }
+            });
     }
 }

@@ -136,7 +136,7 @@ public final class ProcessCredentialsProvider implements AwsCredentialsProvider 
         }
 
         JsonNode version = credentialsJson.get("Version").orElse(null);
-        if (version == null || !version.isNumber() || version.asNumber().asInt() != 1) {
+        if (version == null || !version.isNumber() || !version.asNumber().equals("1")) {
             throw new IllegalStateException("Unsupported credential version: " + version);
         }
         return credentialsJson;

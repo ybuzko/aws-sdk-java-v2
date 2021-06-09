@@ -19,18 +19,15 @@ import java.util.List;
 import java.util.Map;
 import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
-import software.amazon.awssdk.protocols.jsoncore.JsonNumber;
-import software.amazon.awssdk.utils.Validate;
 
 /**
  * A numeric {@link JsonNode}.
  */
 @SdkInternalApi
 public final class NumberJsonNode implements JsonNode {
-    private final JsonNumber value;
+    private final String value;
 
-    public NumberJsonNode(JsonNumber value) {
-        Validate.paramNotNull(value, "value");
+    public NumberJsonNode(String value) {
         this.value = value;
     }
 
@@ -40,7 +37,7 @@ public final class NumberJsonNode implements JsonNode {
     }
 
     @Override
-    public JsonNumber asNumber() {
+    public String asNumber() {
         return value;
     }
 
