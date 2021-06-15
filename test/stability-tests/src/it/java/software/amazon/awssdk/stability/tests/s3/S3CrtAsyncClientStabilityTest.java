@@ -28,7 +28,7 @@ import software.amazon.awssdk.stability.tests.utils.RetryableTest;
  * Stability tests for {@link S3CrtAsyncClient}
  */
 public class S3CrtAsyncClientStabilityTest extends S3BaseStabilityTest {
-    private static final String BUCKET_NAME = "s3crtasyncclinetstabilitytests" + System.currentTimeMillis();
+    private static final String BUCKET_NAME = "s3crtasyncclinetstabilitytests1623359605381";
     private static S3CrtAsyncClient s3CrtAsyncClient;
 
     static {
@@ -44,20 +44,20 @@ public class S3CrtAsyncClientStabilityTest extends S3BaseStabilityTest {
 
     @BeforeAll
     public static void setup() {
-        s3ApacheClient.createBucket(b -> b.bucket(BUCKET_NAME));
+        //s3ApacheClient.createBucket(b -> b.bucket(BUCKET_NAME));
     }
 
     @AfterAll
     public static void cleanup() {
-        try (S3AsyncClient s3NettyClient = S3AsyncClient.builder()
-                                     .httpClientBuilder(NettyNioAsyncHttpClient.builder()
-                                                                               .maxConcurrency(CONCURRENCY))
-                                     .credentialsProvider(CREDENTIALS_PROVIDER_CHAIN)
-                                     .build()) {
-            deleteBucketAndAllContents(s3NettyClient, BUCKET_NAME);
-        }
-        s3CrtAsyncClient.close();
-        s3ApacheClient.close();
+//        try (S3AsyncClient s3NettyClient = S3AsyncClient.builder()
+//                                     .httpClientBuilder(NettyNioAsyncHttpClient.builder()
+//                                                                               .maxConcurrency(CONCURRENCY))
+//                                     .credentialsProvider(CREDENTIALS_PROVIDER_CHAIN)
+//                                     .build()) {
+//            deleteBucketAndAllContents(s3NettyClient, BUCKET_NAME);
+//        }
+//        s3CrtAsyncClient.close();
+//        s3ApacheClient.close();
     }
 
     @Override
@@ -68,7 +68,7 @@ public class S3CrtAsyncClientStabilityTest extends S3BaseStabilityTest {
     @RetryableTest(maxRetries = 3, retryableException = StabilityTestsRetryableException.class)
     public void largeObject_put_get_usingFile() {
         uploadLargeObjectFromFile();
-        downloadLargeObjectToFile();
+        //downloadLargeObjectToFile();
     }
 
     @RetryableTest(maxRetries = 3, retryableException = StabilityTestsRetryableException.class)

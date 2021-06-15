@@ -31,6 +31,7 @@ import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.internal.util.Mimetype;
 import software.amazon.awssdk.core.internal.util.NoopSubscription;
+import software.amazon.awssdk.utils.Logger;
 import software.amazon.awssdk.utils.builder.SdkBuilder;
 
 /**
@@ -41,6 +42,7 @@ import software.amazon.awssdk.utils.builder.SdkBuilder;
  */
 @SdkInternalApi
 public final class FileAsyncRequestBody implements AsyncRequestBody {
+    private static final Logger log = Logger.loggerFor(FileAsyncRequestBody.class);
 
     /**
      * Default size (in bytes) of ByteBuffer chunks read from the file and delivered to the subscriber.
@@ -170,8 +172,8 @@ public final class FileAsyncRequestBody implements AsyncRequestBody {
         private final int chunkSize;
 
         private long position = 0;
-        private AtomicLong outstandingDemand = new AtomicLong(0);
-        private boolean writeInProgress = false;
+        private final AtomicLong outstandingDemand = new AtomicLong(0);
+        private boolean readInProgress = false;
         private volatile boolean done = false;
 
         private FileSubscription(AsynchronousFileChannel inputChannel, Subscriber<? super ByteBuffer> subscriber, int chunkSize) {
@@ -189,24 +191,30 @@ public final class FileAsyncRequestBody implements AsyncRequestBody {
             if (n < 1) {
                 IllegalArgumentException ex =
                     new IllegalArgumentException(subscriber + " violated the Reactive Streams rule 3.9 by requesting a "
-                            + "non-positive number of elements.");
+                                                 + "non-positive number of elements.");
                 signalOnError(ex);
             } else {
                 try {
                     // As governed by rule 3.17, when demand overflows `Long.MAX_VALUE` we treat the signalled demand as
                     // "effectively unbounded"
-                    outstandingDemand.getAndUpdate(initialDemand -> {
-                        if (Long.MAX_VALUE - initialDemand < n) {
-                            return Long.MAX_VALUE;
-                        } else {
-                            return initialDemand + n;
-                        }
-                    });
 
+                    log.info(() -> " received demand. " + n + " Total: " + outstandingDemand.get());
                     synchronized (this) {
-                        if (!writeInProgress) {
-                            writeInProgress = true;
+                        outstandingDemand.getAndUpdate(initialDemand -> {
+                            if (Long.MAX_VALUE - initialDemand < n) {
+                                return Long.MAX_VALUE;
+                            } else {
+                                return initialDemand + n;
+                            }
+                        });
+
+                        // RACE CONDITION: step 2
+                        if (!readInProgress) {
+                            readInProgress = true;
+                            log.info(() -> "received demand, readInProgress = true.reading data " + outstandingDemand.get());
                             readData();
+                        } else {
+                            log.info(() -> "readInProgress is false. Not reading data " + outstandingDemand.get());
                         }
                     }
                 } catch (Exception e) {
@@ -238,9 +246,13 @@ public final class FileAsyncRequestBody implements AsyncRequestBody {
                     if (result > 0) {
                         attachment.flip();
                         position += attachment.remaining();
+                        log.info(() -> "signal onNext. Current outstanding demand " + outstandingDemand.get());
                         signalOnNext(attachment);
                         // If we have more permits, queue up another read.
+
+                        // RACE CONDITION: step 1:
                         if (outstandingDemand.decrementAndGet() > 0) {
+                            log.info(() -> "outstandingDemand > 0, reading more data " + outstandingDemand.get());
                             readData();
                             return;
                         }
@@ -250,13 +262,23 @@ public final class FileAsyncRequestBody implements AsyncRequestBody {
                         closeFile();
                     }
 
+                    //                    // If we have more permits, queue up another read.
+                    //                    if (outstandingDemand.decrementAndGet() > 0) {
+                    //                        log.info(() -> "checking again outstandingDemand > 0, reading more data " + outstandingDemand.get());
+                    //                        readData();
+                    //                        return;
+                    //                    }
+
+                    // RACE CONDITION: step 3
                     synchronized (FileSubscription.this) {
-                        writeInProgress = false;
+                        log.info(() -> "done reading, readInProgress = false");
+                        readInProgress = false;
                     }
                 }
 
                 @Override
                 public void failed(Throwable exc, ByteBuffer attachment) {
+                    log.error(() -> "Fail to read data ", exc);
                     signalOnError(exc);
                     closeFile();
                 }
