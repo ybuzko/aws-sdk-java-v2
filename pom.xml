@@ -509,14 +509,6 @@
                         <onlyModified>true</onlyModified>
                         <excludes>
                             <exclude>*.internal.*</exclude>
-                            <exclude>software.amazon.awssdk.core.client.handler.ClientExecutionParams</exclude>
-                            <exclude>software.amazon.awssdk.core.interceptor.SdkInternalExecutionAttribute</exclude>
-                            <exclude>software.amazon.awssdk.awscore.eventstream.*</exclude>
-                            <exclude>software.amazon.awssdk.protocols.json.BaseAwsJsonProtocolFactory</exclude>
-                            <exclude>software.amazon.awssdk.services.macie2.model.*</exclude>
-
-                            <!-- codebuild update -->
-                            <exclude>software.amazon.awssdk.services.codebuild.*</exclude>
                         </excludes>
 
                         <excludeModules>
