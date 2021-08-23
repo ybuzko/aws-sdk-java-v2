@@ -255,7 +255,7 @@ public final class EventStreamAsyncResponseTransformer<ResponseT, EventT>
     }
 
     /**
-     * Handle the event stream message according to it's type.
+     * Handle the event stream message according to its type.
      *
      * @param m Decoded message.
      */
