@@ -21,6 +21,7 @@ import software.amazon.awssdk.http.async.AsyncExecuteRequest;
 import software.amazon.awssdk.http.async.SdkAsyncHttpResponseHandler;
 import software.amazon.awssdk.metrics.MetricCollector;
 import software.amazon.awssdk.metrics.NoOpMetricCollector;
+import software.amazon.awssdk.utils.ExecutionLog;
 
 @SdkInternalApi
 public final class RequestContext {
@@ -31,6 +32,7 @@ public final class RequestContext {
     private final NettyConfiguration configuration;
 
     private final MetricCollector metricCollector;
+    private final ExecutionLog executionLog;
 
     public RequestContext(SdkChannelPool channelPool,
                           EventLoopGroup eventLoopGroup,
@@ -41,6 +43,7 @@ public final class RequestContext {
         this.executeRequest = executeRequest;
         this.configuration = configuration;
         this.metricCollector = executeRequest.metricCollector().orElseGet(NoOpMetricCollector::create);
+        this.executionLog = executeRequest.executionLog();
     }
 
     public SdkChannelPool channelPool() {
@@ -71,5 +74,9 @@ public final class RequestContext {
 
     public MetricCollector metricCollector() {
         return metricCollector;
+    }
+
+    public ExecutionLog executionLog() {
+        return executionLog;
     }
 }

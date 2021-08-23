@@ -126,8 +126,6 @@ public final class ChannelPipelineInitializer extends AbstractChannelPoolHandler
         if (protocol == Protocol.HTTP1_1) {
             pipeline.addLast(UnusedChannelExceptionHandler.getInstance());
         }
-
-        pipeline.addLast(new LoggingHandler(LogLevel.DEBUG));
     }
 
     private void configureHttp2(Channel ch, ChannelPipeline pipeline) {
@@ -137,7 +135,7 @@ public final class ChannelPipelineInitializer extends AbstractChannelPoolHandler
             Http2FrameCodecBuilder.forClient()
                                   .headerSensitivityDetector((name, value) -> lowerCase(name.toString()).equals("authorization"))
                                   .initialSettings(Http2Settings.defaultSettings().initialWindowSize(clientInitialWindowSize))
-                                  .frameLogger(new Http2FrameLogger(LogLevel.DEBUG))
+                                  .frameLogger(new Http2FrameLogger(LogLevel.TRACE))
                                   .build();
 
         // Connection listeners have higher priority than handlers, in the eyes of the Http2FrameCodec. The Http2FrameCodec will

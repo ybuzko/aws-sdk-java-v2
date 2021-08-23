@@ -35,6 +35,7 @@ import software.amazon.awssdk.core.client.config.SdkClientOption;
 import software.amazon.awssdk.core.exception.ApiCallAttemptTimeoutException;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.interceptor.SdkInternalExecutionAttribute;
 import software.amazon.awssdk.core.internal.http.HttpClientDependencies;
 import software.amazon.awssdk.core.internal.http.RequestExecutionContext;
@@ -54,6 +55,7 @@ import software.amazon.awssdk.http.async.SdkHttpContentPublisher;
 import software.amazon.awssdk.metrics.MetricCollector;
 import software.amazon.awssdk.utils.CompletableFutureUtils;
 import software.amazon.awssdk.utils.Logger;
+import software.amazon.awssdk.utils.internal.DefaultExecutionLog;
 
 /**
  * Delegate to the HTTP implementation to make an HTTP request and receive the response.
@@ -180,12 +182,15 @@ public final class MakeAsyncHttpRequestStage<OutputT>
 
         MetricCollector httpMetricCollector = MetricUtils.createHttpMetricsCollector(context);
 
+        DefaultExecutionLog executionLog = context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG);
+
         AsyncExecuteRequest executeRequest = AsyncExecuteRequest.builder()
                                                                 .request(requestWithContentLength)
                                                                 .requestContentPublisher(requestProvider)
                                                                 .responseHandler(wrappedResponseHandler)
                                                                 .fullDuplex(isFullDuplex(context.executionAttributes()))
                                                                 .metricCollector(httpMetricCollector)
+                                                                .executionLog(executionLog)
                                                                 .build();
 
         CompletableFuture<Void> httpClientFuture = doExecuteHttpRequest(context, executeRequest);

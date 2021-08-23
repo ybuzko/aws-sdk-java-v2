@@ -19,6 +19,7 @@ import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkPublicApi;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.metrics.MetricCollector;
+import software.amazon.awssdk.utils.ExecutionLog;
 
 /**
  * Request object containing the parameters necessary to make an asynchronous HTTP request.
@@ -31,6 +32,7 @@ public final class AsyncExecuteRequest {
     private final SdkHttpContentPublisher requestContentPublisher;
     private final SdkAsyncHttpResponseHandler responseHandler;
     private final MetricCollector metricCollector;
+    private final ExecutionLog executionLog;
     private final boolean isFullDuplex;
 
     private AsyncExecuteRequest(BuilderImpl builder) {
@@ -38,6 +40,7 @@ public final class AsyncExecuteRequest {
         this.requestContentPublisher = builder.requestContentPublisher;
         this.responseHandler = builder.responseHandler;
         this.metricCollector = builder.metricCollector;
+        this.executionLog = builder.executionLog != null ? builder.executionLog : ExecutionLog.createNoop();
         this.isFullDuplex = builder.isFullDuplex;
     }
 
@@ -67,6 +70,10 @@ public final class AsyncExecuteRequest {
      */
     public Optional<MetricCollector> metricCollector() {
         return Optional.ofNullable(metricCollector);
+    }
+
+    public ExecutionLog executionLog() {
+        return executionLog;
     }
 
     /**
@@ -114,6 +121,8 @@ public final class AsyncExecuteRequest {
          */
         Builder metricCollector(MetricCollector metricCollector);
 
+        Builder executionLog(ExecutionLog executionLog);
+
         /**
          * Option to indicate if the request is for a full duplex operation ie., request and response are sent/received at
          * the same time.
@@ -133,6 +142,7 @@ public final class AsyncExecuteRequest {
         private SdkHttpContentPublisher requestContentPublisher;
         private SdkAsyncHttpResponseHandler responseHandler;
         private MetricCollector metricCollector;
+        private ExecutionLog executionLog;
         private boolean isFullDuplex;
 
         @Override
@@ -156,6 +166,12 @@ public final class AsyncExecuteRequest {
         @Override
         public Builder metricCollector(MetricCollector metricCollector) {
             this.metricCollector = metricCollector;
+            return this;
+        }
+
+        @Override
+        public Builder executionLog(ExecutionLog executionLog) {
+            this.executionLog = executionLog;
             return this;
         }
 
