@@ -18,8 +18,8 @@ package software.amazon.awssdk.http.nio.netty.internal;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import software.amazon.awssdk.utils.ExecutionLog;
-import software.amazon.awssdk.utils.ExecutionLogType;
+import software.amazon.awssdk.utils.executionlog.ExecutionLog;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 public class SdkLoggingHandler extends LoggingHandler {
     private final ExecutionLog executionLog;

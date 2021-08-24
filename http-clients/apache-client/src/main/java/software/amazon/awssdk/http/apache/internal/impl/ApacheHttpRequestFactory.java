@@ -53,7 +53,7 @@ public class ApacheHttpRequestFactory {
         HttpRequestBase base = createApacheRequest(request, sanitizeUri(request.httpRequest()));
         addHeadersToRequest(base, request.httpRequest());
         addRequestConfig(base, request.httpRequest(), requestConfig);
-
+        
         return base;
     }
 

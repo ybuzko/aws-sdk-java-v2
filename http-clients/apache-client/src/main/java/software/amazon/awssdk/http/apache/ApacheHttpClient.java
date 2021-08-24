@@ -229,7 +229,7 @@ public final class ApacheHttpClient implements SdkHttpClient {
         return new ExecutableHttpRequest() {
             @Override
             public HttpExecuteResponse call() throws IOException {
-                HttpExecuteResponse executeResponse = execute(apacheRequest);
+                HttpExecuteResponse executeResponse = execute(apacheRequest, request);
                 collectPoolMetric(metricCollector);
                 return executeResponse;
             }
@@ -248,8 +248,8 @@ public final class ApacheHttpClient implements SdkHttpClient {
         cm.shutdown();
     }
 
-    private HttpExecuteResponse execute(HttpRequestBase apacheRequest) throws IOException {
-        HttpClientContext localRequestContext = ApacheUtils.newClientContext(requestConfig.proxyConfiguration());
+    private HttpExecuteResponse execute(HttpRequestBase apacheRequest, HttpExecuteRequest sdkRequest) throws IOException {
+        HttpClientContext localRequestContext = ApacheUtils.newClientContext(requestConfig.proxyConfiguration(), sdkRequest);
         HttpResponse httpResponse = httpClient.execute(apacheRequest, localRequestContext);
         return createResponse(httpResponse, apacheRequest);
     }

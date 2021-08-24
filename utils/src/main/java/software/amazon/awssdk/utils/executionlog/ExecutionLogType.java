@@ -13,8 +13,10 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.utils;
+package software.amazon.awssdk.utils.executionlog;
 
 public enum ExecutionLogType {
-    WIRE
+    WIRE,
+    RETRY,
+    IDS
 }

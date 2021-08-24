@@ -21,7 +21,7 @@ import software.amazon.awssdk.core.ClientType;
 import software.amazon.awssdk.core.ServiceConfiguration;
 import software.amazon.awssdk.core.signer.Signer;
 import software.amazon.awssdk.metrics.MetricCollector;
-import software.amazon.awssdk.utils.internal.DefaultExecutionLog;
+import software.amazon.awssdk.utils.executionlog.ExecutionLog;
 
 /**
  * Contains attributes attached to the execution. This information is available to {@link ExecutionInterceptor}s and
@@ -68,7 +68,7 @@ public class SdkExecutionAttribute {
      */
     public static final ExecutionAttribute<URI> CLIENT_ENDPOINT = new ExecutionAttribute<>("EndpointOverride");
 
-    public static final ExecutionAttribute<DefaultExecutionLog> EXECUTION_LOG = new ExecutionAttribute<>("ExecutionLog");
+    public static final ExecutionAttribute<ExecutionLog> EXECUTION_LOG = new ExecutionAttribute<>("ExecutionLog");
     
     protected SdkExecutionAttribute() {
     }

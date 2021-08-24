@@ -13,30 +13,32 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.utils;
+package software.amazon.awssdk.utils.internal.executionlog;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Instant;
+import java.util.Optional;
+import software.amazon.awssdk.annotations.SdkInternalApi;
+import software.amazon.awssdk.utils.Validate;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogEntry;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
-public final class ExecutionLogEntry {
+@SdkInternalApi
+public final class DefaultExecutionLogEntry implements ExecutionLogEntry {
     private final ExecutionLogType logType;
     private final Instant time;
-    private final String entry;
+    private final String message;
     private final Throwable exception;
 
-    public ExecutionLogEntry(Builder builder) {
+    public DefaultExecutionLogEntry(Builder builder) {
         this.logType = Validate.paramNotNull(builder.logType, "logType");
         this.time = Validate.paramNotNull(builder.time, "time");
-        this.entry = Validate.paramNotNull(builder.entry, "entry");
+        this.message = Validate.paramNotNull(builder.message, "message");
         this.exception = builder.exception;
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public ExecutionLogType logType() {
+    public ExecutionLogType type() {
         return logType;
     }
 
@@ -44,18 +46,18 @@ public final class ExecutionLogEntry {
         return time;
     }
 
-    public String entry() {
-        return entry;
+    public String message() {
+        return message;
     }
 
-    public Throwable exception() {
-        return exception;
+    public Optional<Throwable> exception() {
+        return Optional.ofNullable(exception);
     }
 
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
-        result.append(time).append(" - [").append(logType).append("] ").append(entry);
+        result.append(time).append(" - [").append(logType).append("] ").append(message);
         if (exception != null) {
             StringWriter writer = new StringWriter();
             exception.printStackTrace(new PrintWriter(writer));
@@ -64,16 +66,28 @@ public final class ExecutionLogEntry {
         return result.toString();
     }
 
-    public static final class Builder {
-        private Builder() {
-        }
+    @Override
+    public ExecutionLogEntry.Builder toBuilder() {
+        return new Builder(this);
+    }
 
+    public static final class Builder implements ExecutionLogEntry.Builder {
         private ExecutionLogType logType;
         private Instant time;
-        private String entry;
+        private String message;
         private Throwable exception;
 
-        public Builder logType(ExecutionLogType logType) {
+        public Builder(DefaultExecutionLogEntry source) {
+            this.logType = source.logType;
+            this.time = source.time;
+            this.message = source.message;
+            this.exception = source.exception;
+        }
+
+        public Builder() {
+        }
+
+        public Builder type(ExecutionLogType logType) {
             this.logType = logType;
             return this;
         }
@@ -83,8 +97,8 @@ public final class ExecutionLogEntry {
             return this;
         }
 
-        public Builder entry(String entry) {
-            this.entry = entry;
+        public Builder message(String message) {
+            this.message = message;
             return this;
         }
 
@@ -93,8 +107,9 @@ public final class ExecutionLogEntry {
             return this;
         }
 
+        @Override
         public ExecutionLogEntry build() {
-            return new ExecutionLogEntry(this);
+            return new DefaultExecutionLogEntry(this);
         }
     }
 

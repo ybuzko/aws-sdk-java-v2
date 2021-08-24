@@ -19,7 +19,7 @@ import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkPublicApi;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.metrics.MetricCollector;
-import software.amazon.awssdk.utils.ExecutionLog;
+import software.amazon.awssdk.utils.executionlog.ExecutionLog;
 
 /**
  * Request object containing the parameters necessary to make an asynchronous HTTP request.

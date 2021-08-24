@@ -13,13 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.utils.internal;
+package software.amazon.awssdk.utils.internal.executionlog;
 
 import java.util.List;
 import java.util.function.Supplier;
-import software.amazon.awssdk.utils.ExecutionLog;
-import software.amazon.awssdk.utils.ExecutionLogEntry;
-import software.amazon.awssdk.utils.ExecutionLogType;
+import software.amazon.awssdk.utils.executionlog.ExecutionLog;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogEntry;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 public class NoOpExecutionLog implements ExecutionLog {
     @Override

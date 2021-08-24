@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.utils.internal;
+package software.amazon.awssdk.utils.internal.executionlog;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -23,9 +23,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
-import software.amazon.awssdk.utils.ExecutionLog;
-import software.amazon.awssdk.utils.ExecutionLogEntry;
-import software.amazon.awssdk.utils.ExecutionLogType;
+import software.amazon.awssdk.utils.executionlog.ExecutionLog;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogEntry;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 public final class DefaultExecutionLog implements ExecutionLog {
     private final List<ExecutionLogEntry> logs = Collections.synchronizedList(new ArrayList<>());
@@ -44,9 +44,9 @@ public final class DefaultExecutionLog implements ExecutionLog {
     public void add(ExecutionLogType logType, Supplier<String> msg, Throwable throwable) {
         if (enabledLogTypes.contains(logType)) {
             logs.add(ExecutionLogEntry.builder()
-                                      .logType(logType)
+                                      .type(logType)
                                       .time(Instant.now())
-                                      .entry(msg.get())
+                                      .message(msg.get())
                                       .exception(throwable)
                                       .build());
         }

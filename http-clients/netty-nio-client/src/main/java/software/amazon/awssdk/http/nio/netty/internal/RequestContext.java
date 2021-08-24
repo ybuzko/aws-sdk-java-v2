@@ -21,7 +21,7 @@ import software.amazon.awssdk.http.async.AsyncExecuteRequest;
 import software.amazon.awssdk.http.async.SdkAsyncHttpResponseHandler;
 import software.amazon.awssdk.metrics.MetricCollector;
 import software.amazon.awssdk.metrics.NoOpMetricCollector;
-import software.amazon.awssdk.utils.ExecutionLog;
+import software.amazon.awssdk.utils.executionlog.ExecutionLog;
 
 @SdkInternalApi
 public final class RequestContext {

@@ -55,7 +55,7 @@ import software.amazon.awssdk.http.async.SdkHttpContentPublisher;
 import software.amazon.awssdk.metrics.MetricCollector;
 import software.amazon.awssdk.utils.CompletableFutureUtils;
 import software.amazon.awssdk.utils.Logger;
-import software.amazon.awssdk.utils.internal.DefaultExecutionLog;
+import software.amazon.awssdk.utils.executionlog.ExecutionLog;
 
 /**
  * Delegate to the HTTP implementation to make an HTTP request and receive the response.
@@ -182,7 +182,7 @@ public final class MakeAsyncHttpRequestStage<OutputT>
 
         MetricCollector httpMetricCollector = MetricUtils.createHttpMetricsCollector(context);
 
-        DefaultExecutionLog executionLog = context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG);
+        ExecutionLog executionLog = context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG);
 
         AsyncExecuteRequest executeRequest = AsyncExecuteRequest.builder()
                                                                 .request(requestWithContentLength)

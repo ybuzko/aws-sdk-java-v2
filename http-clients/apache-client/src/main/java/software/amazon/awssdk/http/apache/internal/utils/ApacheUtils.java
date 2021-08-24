@@ -31,7 +31,9 @@ import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import software.amazon.awssdk.annotations.SdkInternalApi;
+import software.amazon.awssdk.http.HttpExecuteRequest;
 import software.amazon.awssdk.http.apache.ProxyConfiguration;
+import software.amazon.awssdk.http.apache.internal.ExecutionLogInterceptor;
 import software.amazon.awssdk.utils.Logger;
 import software.amazon.awssdk.utils.ReflectionMethodInvoker;
 
@@ -77,7 +79,7 @@ public final class ApacheUtils {
     /**
      * Returns a new HttpClientContext used for request execution.
      */
-    public static HttpClientContext newClientContext(ProxyConfiguration proxyConfiguration) {
+    public static HttpClientContext newClientContext(ProxyConfiguration proxyConfiguration, HttpExecuteRequest sdkRequest) {
         HttpClientContext clientContext = new HttpClientContext();
         addPreemptiveAuthenticationProxy(clientContext, proxyConfiguration);
 
@@ -85,6 +87,7 @@ public final class ApacheUtils {
         disableNormalizeUri(builder);
 
         clientContext.setRequestConfig(builder.build());
+        clientContext.setAttribute(ExecutionLogInterceptor.CONTEXT_KEY, sdkRequest.executionLog());
         return clientContext;
 
     }

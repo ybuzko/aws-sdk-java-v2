@@ -13,12 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.utils;
+package software.amazon.awssdk.utils.executionlog;
 
 import java.util.List;
 import java.util.function.Supplier;
-import software.amazon.awssdk.utils.internal.DefaultExecutionLog;
-import software.amazon.awssdk.utils.internal.NoOpExecutionLog;
+import software.amazon.awssdk.utils.internal.executionlog.DefaultExecutionLog;
+import software.amazon.awssdk.utils.internal.executionlog.NoOpExecutionLog;
 
 public interface ExecutionLog {
     static ExecutionLog create(ExecutionLogType... enabledLogTypes) {

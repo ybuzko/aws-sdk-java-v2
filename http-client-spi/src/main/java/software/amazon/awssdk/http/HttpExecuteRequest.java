@@ -18,6 +18,7 @@ package software.amazon.awssdk.http;
 import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkPublicApi;
 import software.amazon.awssdk.metrics.MetricCollector;
+import software.amazon.awssdk.utils.executionlog.ExecutionLog;
 
 /**
  * Request object containing the parameters necessary to make a synchronous HTTP request.
@@ -30,11 +31,13 @@ public final class HttpExecuteRequest {
     private final SdkHttpRequest request;
     private final Optional<ContentStreamProvider> contentStreamProvider;
     private final MetricCollector metricCollector;
+    private final ExecutionLog executionLog;
 
     private HttpExecuteRequest(BuilderImpl builder) {
         this.request = builder.request;
         this.contentStreamProvider = builder.contentStreamProvider;
         this.metricCollector = builder.metricCollector;
+        this.executionLog = builder.executionLog != null ? builder.executionLog : ExecutionLog.createNoop();
     }
 
     /**
@@ -56,6 +59,9 @@ public final class HttpExecuteRequest {
      */
     public Optional<MetricCollector> metricCollector() {
         return Optional.ofNullable(metricCollector);
+    }
+    public ExecutionLog executionLog() {
+        return executionLog;
     }
 
     public static Builder builder() {
@@ -87,6 +93,8 @@ public final class HttpExecuteRequest {
          */
         Builder metricCollector(MetricCollector metricCollector);
 
+        Builder executionLog(ExecutionLog executionLog);
+
         HttpExecuteRequest build();
     }
 
@@ -94,6 +102,7 @@ public final class HttpExecuteRequest {
         private SdkHttpRequest request;
         private Optional<ContentStreamProvider> contentStreamProvider = Optional.empty();
         private MetricCollector metricCollector;
+        private ExecutionLog executionLog;
 
         @Override
         public Builder request(SdkHttpRequest request) {
@@ -110,6 +119,12 @@ public final class HttpExecuteRequest {
         @Override
         public Builder metricCollector(MetricCollector metricCollector) {
             this.metricCollector = metricCollector;
+            return this;
+        }
+
+        @Override
+        public Builder executionLog(ExecutionLog executionLog) {
+            this.executionLog = executionLog;
             return this;
         }
 
