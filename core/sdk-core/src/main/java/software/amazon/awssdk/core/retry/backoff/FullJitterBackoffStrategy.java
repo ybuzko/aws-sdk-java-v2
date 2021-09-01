@@ -21,10 +21,12 @@ import static software.amazon.awssdk.utils.Validate.isNotNegative;
 import java.time.Duration;
 import java.util.Random;
 import software.amazon.awssdk.annotations.SdkPublicApi;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.utils.ToString;
 import software.amazon.awssdk.utils.builder.CopyableBuilder;
 import software.amazon.awssdk.utils.builder.ToCopyableBuilder;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * Backoff strategy that uses a full jitter strategy for computing the next backoff delay. A full jitter
@@ -62,6 +64,8 @@ public final class FullJitterBackoffStrategy implements BackoffStrategy,
     public Duration computeDelayBeforeNextRetry(RetryPolicyContext context) {
         int ceil = calculateExponentialDelay(context.retriesAttempted(), baseDelay, maxBackoffTime);
         // Minimum of 1 ms (consistent with BackoffStrategy.none()'s behavior)
+        context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)
+               .add(ExecutionLogType.RETRY, () -> "Calculating random backoff in [1, " + (ceil + 1) + "] ms");
         return Duration.ofMillis(random.nextInt(ceil) + 1L);
     }
 

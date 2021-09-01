@@ -32,7 +32,7 @@ public interface ExecutionLog {
 
     String operationName();
 
-    String log();
+    String toString();
 
     void serviceName(String serviceName);
 

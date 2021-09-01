@@ -156,6 +156,10 @@ public abstract class RequestOverrideConfiguration {
         return executionAttributes;
     }
 
+    public ExecutionLog executionLog() {
+        return executionLog;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

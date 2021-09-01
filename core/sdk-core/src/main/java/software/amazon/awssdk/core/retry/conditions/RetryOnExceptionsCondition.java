@@ -58,10 +58,10 @@ public final class RetryOnExceptionsCondition implements RetryCondition {
         Predicate<Class<? extends Exception>> isRetryableException =
             ex -> ex.isAssignableFrom(exception.getClass());
 
-        Predicate<Class<? extends Exception>> hasRetrableCause =
+        Predicate<Class<? extends Exception>> hasRetryableCause =
             ex -> exception.getCause() != null && ex.isAssignableFrom(exception.getCause().getClass());
 
-        boolean result = exceptionsToRetryOn.stream().anyMatch(isRetryableException.or(hasRetrableCause));
+        boolean result = exceptionsToRetryOn.stream().anyMatch(isRetryableException.or(hasRetryableCause));
 
         if (result) {
             context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)

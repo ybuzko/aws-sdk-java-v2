@@ -16,7 +16,9 @@
 package software.amazon.awssdk.core.exception;
 
 import software.amazon.awssdk.annotations.SdkPublicApi;
+import software.amazon.awssdk.utils.Validate;
 import software.amazon.awssdk.utils.builder.Buildable;
+import software.amazon.awssdk.utils.executionlog.ExecutionLog;
 
 /**
  * Base class for all exceptions thrown by the SDK.
@@ -28,9 +30,11 @@ import software.amazon.awssdk.utils.builder.Buildable;
 public class SdkException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
+    private final ExecutionLog sdkExecutionLog;
 
     protected SdkException(Builder builder) {
         super(messageFromBuilder(builder), builder.cause());
+        this.sdkExecutionLog = Validate.paramNotNull(builder.sdkExecutionLog(), "sdkExecutionLog");
     }
 
     /**
@@ -57,6 +61,10 @@ public class SdkException extends RuntimeException {
      */
     public boolean retryable() {
         return false;
+    }
+
+    public ExecutionLog sdkExecutionLog() {
+        return sdkExecutionLog;
     }
 
     /**
@@ -106,6 +114,10 @@ public class SdkException extends RuntimeException {
          */
         String message();
 
+        Builder sdkExecutionLog(ExecutionLog sdkExecutionLog);
+
+        ExecutionLog sdkExecutionLog();
+
         /**
          * Creates a new {@link SdkException} with the specified properties.
          *
@@ -116,9 +128,9 @@ public class SdkException extends RuntimeException {
     }
 
     protected static class BuilderImpl implements Builder {
-
         protected Throwable cause;
         protected String message;
+        protected ExecutionLog sdkExecutionLog = ExecutionLog.disabled();
 
         protected BuilderImpl() {
         }
@@ -126,6 +138,7 @@ public class SdkException extends RuntimeException {
         protected BuilderImpl(SdkException ex) {
             this.cause = ex.getCause();
             this.message = ex.getMessage();
+            this.sdkExecutionLog = ex.sdkExecutionLog();
         }
 
 
@@ -165,6 +178,17 @@ public class SdkException extends RuntimeException {
         @Override
         public String message() {
             return message;
+        }
+
+        @Override
+        public Builder sdkExecutionLog(ExecutionLog sdkExecutionLog) {
+            this.sdkExecutionLog = sdkExecutionLog;
+            return this;
+        }
+
+        @Override
+        public ExecutionLog sdkExecutionLog() {
+            return sdkExecutionLog;
         }
 
         public SdkException build() {

@@ -20,6 +20,8 @@ import java.util.Optional;
 import software.amazon.awssdk.annotations.Immutable;
 import software.amazon.awssdk.annotations.SdkPublicApi;
 import software.amazon.awssdk.http.SdkHttpResponse;
+import software.amazon.awssdk.utils.Validate;
+import software.amazon.awssdk.utils.executionlog.ExecutionLog;
 
 /**
  * The base class for all SDK responses.
@@ -31,9 +33,11 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 public abstract class SdkResponse implements SdkPojo {
 
     private final SdkHttpResponse sdkHttpResponse;
+    private final ExecutionLog sdkExecutionLog;
 
     protected SdkResponse(Builder builder) {
         this.sdkHttpResponse = builder.sdkHttpResponse();
+        this.sdkExecutionLog = Validate.paramNotNull(builder.sdkExecutionLog(), "sdkExecutionLog");
     }
 
     /**
@@ -43,6 +47,10 @@ public abstract class SdkResponse implements SdkPojo {
      */
     public SdkHttpResponse sdkHttpResponse() {
         return sdkHttpResponse;
+    }
+
+    public ExecutionLog sdkExecutionLog() {
+        return sdkExecutionLog;
     }
 
     /**
@@ -85,18 +93,25 @@ public abstract class SdkResponse implements SdkPojo {
 
         SdkHttpResponse sdkHttpResponse();
 
+        Builder sdkExecutionLog(ExecutionLog executionLog);
+
+        ExecutionLog sdkExecutionLog();
+
         SdkResponse build();
     }
 
     protected abstract static class BuilderImpl implements Builder {
 
         private SdkHttpResponse sdkHttpResponse;
+        private ExecutionLog sdkExecutionLog;
 
         protected BuilderImpl() {
+            sdkExecutionLog = ExecutionLog.disabled();
         }
 
         protected BuilderImpl(SdkResponse response) {
             this.sdkHttpResponse = response.sdkHttpResponse();
+            this.sdkExecutionLog = response.sdkExecutionLog();
         }
 
         @Override
@@ -108,6 +123,17 @@ public abstract class SdkResponse implements SdkPojo {
         @Override
         public SdkHttpResponse sdkHttpResponse() {
             return sdkHttpResponse;
+        }
+
+        @Override
+        public Builder sdkExecutionLog(ExecutionLog sdkExecutionLog) {
+            this.sdkExecutionLog = sdkExecutionLog;
+            return this;
+        }
+
+        @Override
+        public ExecutionLog sdkExecutionLog() {
+            return sdkExecutionLog;
         }
     }
 }

@@ -37,7 +37,7 @@ public final class HttpExecuteRequest {
         this.request = builder.request;
         this.contentStreamProvider = builder.contentStreamProvider;
         this.metricCollector = builder.metricCollector;
-        this.executionLog = builder.executionLog != null ? builder.executionLog : ExecutionLog.createNoop();
+        this.executionLog = builder.executionLog != null ? builder.executionLog : ExecutionLog.disabled();
     }
 
     /**

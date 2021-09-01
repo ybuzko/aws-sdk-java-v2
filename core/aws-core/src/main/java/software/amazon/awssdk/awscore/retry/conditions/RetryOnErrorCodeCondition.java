@@ -45,7 +45,7 @@ public final class RetryOnErrorCodeCondition implements RetryCondition {
             AwsServiceException exception = (AwsServiceException) ex;
             String errorCode = exception.awsErrorDetails().errorCode();
             boolean isRetryableErrorCode = retryableErrorCodes.contains(errorCode);
-            if (!isRetryableErrorCode) {
+            if (isRetryableErrorCode) {
                 context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)
                        .add(ExecutionLogType.RETRY, () -> "Retryable error code encountered: " + errorCode);
             }

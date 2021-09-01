@@ -50,7 +50,7 @@ public final class DefaultExecutionLog implements ExecutionLog {
     }
 
     @Override
-    public String log() {
+    public String toString() {
         StringBuilder result = new StringBuilder();
         result.append("Execution log for ").append(serviceName).append(".").append(operationName).append(":\n");
         logs.forEach(e -> result.append(e).append("\n"));

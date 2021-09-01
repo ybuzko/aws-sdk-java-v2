@@ -19,5 +19,5 @@ public enum ExecutionLogType {
     WIRE,
     RETRY,
     IDS,
-    CLIENT_INPUT_OUTPUT,
+    SDK_REQUEST_RESPONSE
 }

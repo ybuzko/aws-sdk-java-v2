@@ -48,6 +48,7 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -187,6 +188,10 @@ public final class NettyRequestExecutor {
         Protocol protocol = ChannelAttributeKey.getProtocolNow(channel);
         ChannelPipeline pipeline = channel.pipeline();
 
+        try {
+            pipeline.remove(SdkLoggingHandler.class);
+        } catch (NoSuchElementException e) {}
+        pipeline.addLast(new SdkLoggingHandler(context.executionLog()));
         switch (protocol) {
             case HTTP2:
                 pipeline.addLast(new Http2ToHttpInboundAdapter());
@@ -210,7 +215,6 @@ public final class NettyRequestExecutor {
         }
         pipeline.addLast(new HttpStreamsClientHandler());
         pipeline.addLast(ResponseHandler.getInstance());
-        pipeline.addLast(new SdkLoggingHandler(context.executionLog()));
 
         // It's possible that the channel could become inactive between checking it out from the pool, and adding our response
         // handler (which will monitor for it going inactive from now on).

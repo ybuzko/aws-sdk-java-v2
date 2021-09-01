@@ -31,8 +31,8 @@ public class NoopExecutionLog implements ExecutionLog {
     }
 
     @Override
-    public String log() {
-        throw new UnsupportedOperationException("Execution logging is not enabled.");
+    public String toString() {
+        return "Execution logging is not enabled.";
     }
 
     @Override

@@ -111,6 +111,9 @@ public final class ChannelAttributeKey {
     static final AttributeKey<Boolean> CLOSE_ON_RELEASE = NettyUtils.getOrCreateAttributeKey(
             "aws.http.nio.netty.async.closeOnRelease");
 
+    static final AttributeKey<Boolean> CHANNEL_INITIALIZED = NettyUtils.getOrCreateAttributeKey(
+        "aws.http.nio.netty.async.ChannelInitialized");
+
     private ChannelAttributeKey() {
     }
 

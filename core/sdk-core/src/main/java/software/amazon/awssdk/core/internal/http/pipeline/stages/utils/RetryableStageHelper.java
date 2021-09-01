@@ -84,7 +84,6 @@ public class RetryableStageHelper {
     public void startingAttempt() {
         ++attemptNumber;
         context.executionAttributes().putAttribute(InternalCoreExecutionAttribute.EXECUTION_ATTEMPT, attemptNumber);
-        executionLog.add(ExecutionLogType.RETRY, () -> "Beginning attempt " + attemptNumber);
     }
 
     /**
@@ -95,6 +94,9 @@ public class RetryableStageHelper {
         if (isInitialAttempt()) {
             return true;
         }
+
+        executionLog.add(ExecutionLogType.RETRY,
+                         () -> "Attempt failed. Determining whether the request can be retried. Cause: " + lastException);
 
         if (lastException instanceof NonRetryableException) {
             return false;
@@ -114,6 +116,7 @@ public class RetryableStageHelper {
      * Return the exception that should be thrown, because the retry policy did not allow the request to be retried.
      */
     public SdkException retryPolicyDisallowedRetryException() {
+        executionLog.add(ExecutionLogType.RETRY, () -> "Request will not be retried.");
         context.executionContext().metricCollector().reportMetric(CoreMetric.RETRY_COUNT, retriesAttemptedSoFar(true));
         return lastException;
     }
@@ -145,7 +148,7 @@ public class RetryableStageHelper {
         SdkStandardLogger.REQUEST_LOGGER.debug(() -> "Retryable error detected. Will retry in " +
                                                      backoffDelay.toMillis() + "ms. Request attempt number " +
                                                      attemptNumber, lastException);
-        executionLog.add(ExecutionLogType.RETRY, () -> "Request will be retried after " + backoffDelay.toMillis(), lastException);
+        executionLog.add(ExecutionLogType.RETRY, () -> "Request will be retried after " + backoffDelay.toMillis() + " ms");
     }
 
     /**
@@ -162,9 +165,8 @@ public class RetryableStageHelper {
      */
     public void logSendingRequest() {
         SdkStandardLogger.REQUEST_LOGGER.debug(() -> (isInitialAttempt() ? "Sending" : "Retrying") + " Request: " + request);
-        if (!isInitialAttempt()) {
-            executionLog.add(ExecutionLogType.RETRY, () -> "Retrying request.");
-        }
+        executionLog.add(ExecutionLogType.RETRY, () -> "Sending request attempt " + attemptNumber);
+
     }
 
     /**
@@ -184,6 +186,7 @@ public class RetryableStageHelper {
     public void attemptSucceeded() {
         retryPolicy.aggregateRetryCondition().requestSucceeded(retryPolicyContext(false));
         context.executionContext().metricCollector().reportMetric(CoreMetric.RETRY_COUNT, retriesAttemptedSoFar(false));
+        executionLog.add(ExecutionLogType.RETRY, () -> "Request attempt succeeded");
     }
 
     /**

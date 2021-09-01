@@ -21,10 +21,12 @@ import static software.amazon.awssdk.utils.Validate.isNotNegative;
 import java.time.Duration;
 import java.util.Random;
 import software.amazon.awssdk.annotations.SdkPublicApi;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.utils.ToString;
 import software.amazon.awssdk.utils.builder.CopyableBuilder;
 import software.amazon.awssdk.utils.builder.ToCopyableBuilder;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * Backoff strategy that uses equal jitter for computing the delay before the next retry. An equal jitter
@@ -65,7 +67,11 @@ public final class EqualJitterBackoffStrategy implements BackoffStrategy,
     @Override
     public Duration computeDelayBeforeNextRetry(RetryPolicyContext context) {
         int ceil = calculateExponentialDelay(context.retriesAttempted(), baseDelay, maxBackoffTime);
-        return Duration.ofMillis((ceil / 2) + random.nextInt((ceil / 2) + 1));
+
+        int halfCeil = ceil / 2;
+        context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)
+               .add(ExecutionLogType.RETRY, () -> "Calculating random backoff in [" + halfCeil + ", " + (ceil + 1) + "] ms");
+        return Duration.ofMillis(halfCeil + random.nextInt(halfCeil + 1));
     }
 
     @Override

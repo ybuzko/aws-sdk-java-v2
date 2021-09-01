@@ -17,9 +17,12 @@ package software.amazon.awssdk.core.internal.interceptor;
 
 import static software.amazon.awssdk.core.http.HttpResponseHandler.X_AMZN_REQUEST_ID_HEADERS;
 import static software.amazon.awssdk.core.http.HttpResponseHandler.X_AMZ_ID_2_HEADER;
-import static software.amazon.awssdk.utils.executionlog.ExecutionLogType.CLIENT_INPUT_OUTPUT;
+import static software.amazon.awssdk.utils.executionlog.ExecutionLogType.SDK_REQUEST_RESPONSE;
 import static software.amazon.awssdk.utils.executionlog.ExecutionLogType.IDS;
 
+import software.amazon.awssdk.core.RequestOverrideConfiguration;
+import software.amazon.awssdk.core.SdkResponse;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
@@ -30,7 +33,16 @@ import software.amazon.awssdk.utils.http.SdkHttpUtils;
 public class ExecutionLogInterceptor implements ExecutionInterceptor {
     @Override
     public void beforeExecution(Context.BeforeExecution context, ExecutionAttributes executionAttributes) {
-        executionLog(executionAttributes).add(CLIENT_INPUT_OUTPUT, () -> "SDK Request: " + context.request());
+        executionAttributes.putAttribute(SdkExecutionAttribute.EXECUTION_LOG,
+                                         context.request()
+                                                .overrideConfiguration()
+                                                .map(RequestOverrideConfiguration::executionLog)
+                                                .orElse(ExecutionLog.disabled()));
+
+        ExecutionLog executionLog = executionLog(executionAttributes);
+        executionLog.serviceName(executionAttributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME));
+        executionLog.operationName(executionAttributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME));
+        executionLog.add(SDK_REQUEST_RESPONSE, () -> "SDK Request: " + context.request());
     }
 
     @Override
@@ -41,12 +53,32 @@ public class ExecutionLogInterceptor implements ExecutionInterceptor {
 
     @Override
     public void afterUnmarshalling(Context.AfterUnmarshalling context, ExecutionAttributes executionAttributes) {
-        executionLog(executionAttributes).add(CLIENT_INPUT_OUTPUT, () -> "SDK Response: " + context.response());
+        executionLog(executionAttributes).add(SDK_REQUEST_RESPONSE, () -> "SDK Response: " + context.response());
+    }
+
+    @Override
+    public SdkResponse modifyResponse(Context.ModifyResponse context, ExecutionAttributes executionAttributes) {
+        return context.response()
+                      .toBuilder()
+                      .sdkExecutionLog(executionLog(executionAttributes))
+                      .build();
+    }
+
+    @Override
+    public Throwable modifyException(Context.FailedExecution context, ExecutionAttributes executionAttributes) {
+        if (context.exception() instanceof SdkException) {
+            SdkException exception = (SdkException) context.exception();
+            return exception.toBuilder()
+                            .sdkExecutionLog(executionLog(executionAttributes))
+                            .build();
+        }
+
+        return context.exception();
     }
 
     @Override
     public void onExecutionFailure(Context.FailedExecution context, ExecutionAttributes executionAttributes) {
-        executionLog(executionAttributes).add(CLIENT_INPUT_OUTPUT, () -> "SDK Exception: " + context.exception());
+        executionLog(executionAttributes).add(SDK_REQUEST_RESPONSE, () -> "SDK Exception: " + context.exception());
     }
 
     private String requestId(Context.AfterTransmission context) {

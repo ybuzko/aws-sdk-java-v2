@@ -19,8 +19,10 @@ import static software.amazon.awssdk.utils.Validate.isNotNegative;
 
 import java.time.Duration;
 import software.amazon.awssdk.annotations.SdkPublicApi;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.utils.ToString;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * Simple backoff strategy that always uses a fixed delay for the delay before the next retry attempt.
@@ -36,6 +38,8 @@ public final class FixedDelayBackoffStrategy implements BackoffStrategy {
 
     @Override
     public Duration computeDelayBeforeNextRetry(RetryPolicyContext context) {
+        context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)
+               .add(ExecutionLogType.RETRY, () -> "Using fixed backoff of " + fixedBackoff.toMillis() + " ms");
         return fixedBackoff;
     }
 
