@@ -13,11 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package software.amazon.awssdk.utils.executionlog;
+package software.amazon.awssdk.services.dynamodb;
 
-public enum ExecutionLogType {
-    WIRE,
-    RETRY,
-    IDS,
-    CLIENT_INPUT_OUTPUT,
+import org.junit.Test;
+
+public class ExecutionLogDemo {
+    @Test
+    public void demo() {
+        
+    }
 }

@@ -16,11 +16,13 @@
 package software.amazon.awssdk.core.retry.conditions;
 
 import software.amazon.awssdk.annotations.SdkPublicApi;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.internal.retry.SdkDefaultRetrySetting;
 import software.amazon.awssdk.core.retry.RetryMode;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.utils.ToString;
 import software.amazon.awssdk.utils.Validate;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * Simple retry condition that allows retries up to a certain max number of retries.
@@ -44,7 +46,12 @@ public final class MaxNumberOfRetriesCondition implements RetryCondition {
 
     @Override
     public boolean shouldRetry(RetryPolicyContext context) {
-        return context.retriesAttempted() < maxNumberOfRetries;
+        boolean shouldRetry = context.retriesAttempted() < maxNumberOfRetries;
+        if (!shouldRetry) {
+            context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)
+                   .add(ExecutionLogType.RETRY, () -> "Maximum number of retry attempts has been reached.");
+        }
+        return shouldRetry;
     }
 
     @Override

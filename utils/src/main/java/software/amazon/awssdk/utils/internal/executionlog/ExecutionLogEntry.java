@@ -21,21 +21,24 @@ import java.time.Instant;
 import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkInternalApi;
 import software.amazon.awssdk.utils.Validate;
-import software.amazon.awssdk.utils.executionlog.ExecutionLogEntry;
 import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 @SdkInternalApi
-public final class DefaultExecutionLogEntry implements ExecutionLogEntry {
+public final class ExecutionLogEntry {
     private final ExecutionLogType logType;
     private final Instant time;
     private final String message;
     private final Throwable exception;
 
-    public DefaultExecutionLogEntry(Builder builder) {
+    private ExecutionLogEntry(Builder builder) {
         this.logType = Validate.paramNotNull(builder.logType, "logType");
         this.time = Validate.paramNotNull(builder.time, "time");
         this.message = Validate.paramNotNull(builder.message, "message");
         this.exception = builder.exception;
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public ExecutionLogType type() {
@@ -66,23 +69,11 @@ public final class DefaultExecutionLogEntry implements ExecutionLogEntry {
         return result.toString();
     }
 
-    @Override
-    public ExecutionLogEntry.Builder toBuilder() {
-        return new Builder(this);
-    }
-
-    public static final class Builder implements ExecutionLogEntry.Builder {
+    public static final class Builder {
         private ExecutionLogType logType;
         private Instant time;
         private String message;
         private Throwable exception;
-
-        public Builder(DefaultExecutionLogEntry source) {
-            this.logType = source.logType;
-            this.time = source.time;
-            this.message = source.message;
-            this.exception = source.exception;
-        }
 
         public Builder() {
         }
@@ -107,11 +98,8 @@ public final class DefaultExecutionLogEntry implements ExecutionLogEntry {
             return this;
         }
 
-        @Override
         public ExecutionLogEntry build() {
-            return new DefaultExecutionLogEntry(this);
+            return new ExecutionLogEntry(this);
         }
     }
-
-
 }

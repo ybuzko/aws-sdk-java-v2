@@ -15,28 +15,39 @@
 
 package software.amazon.awssdk.utils.internal.executionlog;
 
-import java.util.List;
 import java.util.function.Supplier;
 import software.amazon.awssdk.utils.executionlog.ExecutionLog;
-import software.amazon.awssdk.utils.executionlog.ExecutionLogEntry;
 import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
-public class NoOpExecutionLog implements ExecutionLog {
+public class NoopExecutionLog implements ExecutionLog {
     @Override
-    public void add(ExecutionLogType entryLevel, Supplier<String> msg) {
+    public String serviceName() {
+        throw new UnsupportedOperationException("Execution logging is not enabled.");
     }
 
     @Override
-    public void add(ExecutionLogType entryLogLevel, Supplier<String> msg, Throwable throwable) {
+    public String operationName() {
+        throw new UnsupportedOperationException("Execution logging is not enabled.");
     }
 
     @Override
-    public List<ExecutionLogEntry> entries() {
-        throw new UnsupportedOperationException();
+    public String log() {
+        throw new UnsupportedOperationException("Execution logging is not enabled.");
     }
 
     @Override
-    public String entriesLog() {
-        throw new UnsupportedOperationException();
+    public void serviceName(String serviceName) {
+    }
+
+    @Override
+    public void operationName(String operationName) {
+    }
+
+    @Override
+    public void add(ExecutionLogType logType, Supplier<String> msg) {
+    }
+
+    @Override
+    public void add(ExecutionLogType logType, Supplier<String> msg, Throwable throwable) {
     }
 }

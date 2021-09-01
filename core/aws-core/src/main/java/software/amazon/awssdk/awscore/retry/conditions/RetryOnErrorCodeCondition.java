@@ -20,8 +20,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import software.amazon.awssdk.annotations.SdkPublicApi;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.core.retry.conditions.RetryCondition;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * Retry condition implementation that retries if the exception or the cause of the exception matches the error codes defined.
@@ -41,8 +43,13 @@ public final class RetryOnErrorCodeCondition implements RetryCondition {
         Exception ex = context.exception();
         if (ex instanceof AwsServiceException) {
             AwsServiceException exception = (AwsServiceException) ex;
-
-            return retryableErrorCodes.contains(exception.awsErrorDetails().errorCode());
+            String errorCode = exception.awsErrorDetails().errorCode();
+            boolean isRetryableErrorCode = retryableErrorCodes.contains(errorCode);
+            if (!isRetryableErrorCode) {
+                context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)
+                       .add(ExecutionLogType.RETRY, () -> "Retryable error code encountered: " + errorCode);
+            }
+            return isRetryableErrorCode;
         }
         return false;
     }

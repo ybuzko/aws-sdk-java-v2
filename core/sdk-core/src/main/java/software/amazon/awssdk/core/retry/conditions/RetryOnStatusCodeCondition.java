@@ -21,9 +21,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import software.amazon.awssdk.annotations.SdkPublicApi;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.utils.ToString;
 import software.amazon.awssdk.utils.Validate;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * Retry condition implementation that retries if the HTTP status code matches one of the provided status codes.
@@ -45,8 +47,19 @@ public final class RetryOnStatusCodeCondition implements RetryCondition {
      */
     @Override
     public boolean shouldRetry(RetryPolicyContext context) {
-        return Optional.ofNullable(context.httpStatusCode()).map(s ->
-            statusCodesToRetryOn.stream().anyMatch(code -> code.equals(s))).orElse(false);
+        if (context.httpStatusCode() == null) {
+            return false;
+        }
+
+
+        boolean isRetryableStatusCode = statusCodesToRetryOn.stream().anyMatch(code -> code.equals(context.httpStatusCode()));
+
+        if (isRetryableStatusCode) {
+            context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)
+                   .add(ExecutionLogType.RETRY, () -> "Retryable HTTP status code encountered: " + context.httpStatusCode());
+        }
+
+        return isRetryableStatusCode;
     }
 
     public static RetryOnStatusCodeCondition create(Set<Integer> statusCodesToRetryOn) {

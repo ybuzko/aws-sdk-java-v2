@@ -16,9 +16,11 @@
 package software.amazon.awssdk.core.retry.conditions;
 
 import software.amazon.awssdk.annotations.SdkPublicApi;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.core.retry.RetryUtils;
 import software.amazon.awssdk.utils.ToString;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * A {@link RetryCondition} that will return true if the provided exception seems to be due to a clock skew between the
@@ -35,7 +37,12 @@ public final class RetryOnClockSkewCondition implements RetryCondition {
 
     @Override
     public boolean shouldRetry(RetryPolicyContext context) {
-        return RetryUtils.isClockSkewException(context.exception());
+        boolean clockSkewException = RetryUtils.isClockSkewException(context.exception());
+        if (clockSkewException) {
+            context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)
+                   .add(ExecutionLogType.RETRY, () -> "Potential clock skew error detected.");
+        }
+        return clockSkewException;
     }
 
     @Override

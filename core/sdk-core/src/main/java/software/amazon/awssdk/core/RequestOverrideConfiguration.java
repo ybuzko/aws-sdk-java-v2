@@ -33,6 +33,8 @@ import software.amazon.awssdk.core.signer.Signer;
 import software.amazon.awssdk.metrics.MetricPublisher;
 import software.amazon.awssdk.utils.CollectionUtils;
 import software.amazon.awssdk.utils.Validate;
+import software.amazon.awssdk.utils.executionlog.ExecutionLog;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * Base per-request override configuration for all SDK requests.
@@ -49,6 +51,7 @@ public abstract class RequestOverrideConfiguration {
     private final Signer signer;
     private final List<MetricPublisher> metricPublishers;
     private final ExecutionAttributes executionAttributes;
+    private final ExecutionLog executionLog;
 
     protected RequestOverrideConfiguration(Builder<?> builder) {
         this.headers = CollectionUtils.deepUnmodifiableMap(builder.headers(), () -> new TreeMap<>(String.CASE_INSENSITIVE_ORDER));
@@ -59,6 +62,7 @@ public abstract class RequestOverrideConfiguration {
         this.signer = builder.signer();
         this.metricPublishers = Collections.unmodifiableList(new ArrayList<>(builder.metricPublishers()));
         this.executionAttributes = ExecutionAttributes.unmodifiableExecutionAttributes(builder.executionAttributes());
+        this.executionLog = Validate.paramNotNull(builder.executionLog(), "executionLog");
     }
 
     /**
@@ -403,6 +407,12 @@ public abstract class RequestOverrideConfiguration {
 
         ExecutionAttributes executionAttributes();
 
+        B executionLog(ExecutionLog executionLog);
+
+        ExecutionLog executionLog();
+
+        B enableExecutionLogging(ExecutionLogType... logTypes);
+
         /**
          * Create a new {@code SdkRequestOverrideConfiguration} with the properties set on this builder.
          *
@@ -420,6 +430,7 @@ public abstract class RequestOverrideConfiguration {
         private Signer signer;
         private List<MetricPublisher> metricPublishers = new ArrayList<>();
         private ExecutionAttributes.Builder executionAttributesBuilder = ExecutionAttributes.builder();
+        private ExecutionLog executionLog = ExecutionLog.disabled();
 
         protected BuilderImpl() {
         }
@@ -576,6 +587,22 @@ public abstract class RequestOverrideConfiguration {
         @Override
         public ExecutionAttributes executionAttributes() {
             return executionAttributesBuilder.build();
+        }
+
+        @Override
+        public B executionLog(ExecutionLog executionLog) {
+            this.executionLog = executionLog;
+            return (B) this;
+        }
+
+        @Override
+        public ExecutionLog executionLog() {
+            return executionLog;
+        }
+
+        @Override
+        public B enableExecutionLogging(ExecutionLogType... logTypes) {
+            return executionLog(ExecutionLog.create(logTypes));
         }
 
         public void setExecutionAttributes(ExecutionAttributes executionAttributes) {

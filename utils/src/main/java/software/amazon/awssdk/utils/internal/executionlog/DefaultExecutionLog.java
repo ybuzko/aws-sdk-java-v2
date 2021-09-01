@@ -15,24 +15,57 @@
 
 package software.amazon.awssdk.utils.internal.executionlog;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.synchronizedList;
+import static java.util.Collections.unmodifiableSet;
+
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import software.amazon.awssdk.utils.executionlog.ExecutionLog;
-import software.amazon.awssdk.utils.executionlog.ExecutionLogEntry;
 import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 public final class DefaultExecutionLog implements ExecutionLog {
-    private final List<ExecutionLogEntry> logs = Collections.synchronizedList(new ArrayList<>());
+    private final List<ExecutionLogEntry> logs;
     private final Set<ExecutionLogType> enabledLogTypes;
+    private String serviceName;
+    private String operationName;
 
     public DefaultExecutionLog(ExecutionLogType... enabledLogTypes) {
-        this.enabledLogTypes = new HashSet<>(Arrays.asList(enabledLogTypes));
+        this.logs = synchronizedList(new ArrayList<>());
+        this.enabledLogTypes = unmodifiableSet(new HashSet<>(asList(enabledLogTypes)));
+    }
+
+    @Override
+    public String serviceName() {
+        return serviceName;
+    }
+
+    @Override
+    public String operationName() {
+        return operationName;
+    }
+
+    @Override
+    public String log() {
+        StringBuilder result = new StringBuilder();
+        result.append("Execution log for ").append(serviceName).append(".").append(operationName).append(":\n");
+        logs.forEach(e -> result.append(e).append("\n"));
+        result.setLength(result.length() - 1);
+        return result.toString();
+    }
+
+    @Override
+    public void serviceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    @Override
+    public void operationName(String operationName) {
+        this.operationName = operationName;
     }
 
     @Override
@@ -50,18 +83,5 @@ public final class DefaultExecutionLog implements ExecutionLog {
                                       .exception(throwable)
                                       .build());
         }
-    }
-
-    @Override
-    public List<ExecutionLogEntry> entries() {
-        return Collections.unmodifiableList(logs);
-    }
-
-    @Override
-    public String entriesLog() {
-        StringBuilder result = new StringBuilder();
-        entries().forEach(e -> result.append(e).append("\n"));
-        result.setLength(result.length() - 1);
-        return result.toString();
     }
 }

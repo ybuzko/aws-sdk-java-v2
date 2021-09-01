@@ -28,6 +28,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.WebIdentityTokenCredentialsProviderFactory;
 import software.amazon.awssdk.auth.credentials.internal.WebIdentityTokenCredentialProperties;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.core.retry.conditions.OrRetryCondition;
 import software.amazon.awssdk.core.retry.conditions.RetryCondition;
@@ -41,6 +42,7 @@ import software.amazon.awssdk.services.sts.model.AssumeRoleWithWebIdentityReques
 import software.amazon.awssdk.services.sts.model.IdpCommunicationErrorException;
 import software.amazon.awssdk.utils.IoUtils;
 import software.amazon.awssdk.utils.SdkAutoCloseable;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * An implementation of {@link WebIdentityTokenCredentialsProviderFactory} that allows users to assume a role
@@ -149,7 +151,12 @@ public final class StsWebIdentityCredentialsProviderFactory implements WebIdenti
 
         @Override
         public boolean shouldRetry(RetryPolicyContext context) {
-            return context.exception() instanceof IdpCommunicationErrorException;
+            boolean isIdpCommunicationError = context.exception() instanceof IdpCommunicationErrorException;
+            if (isIdpCommunicationError) {
+                context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)
+                       .add(ExecutionLogType.RETRY, () -> "Retryable exception encountered.", context.exception());
+            }
+            return isIdpCommunicationError;
         }
     }
 }

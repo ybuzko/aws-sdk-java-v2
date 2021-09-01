@@ -22,8 +22,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import software.amazon.awssdk.annotations.SdkPublicApi;
 import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.utils.ToString;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * Retry condition implementation that retries if the exception or the cause of the exception matches the classes defined.
@@ -59,7 +61,14 @@ public final class RetryOnExceptionsCondition implements RetryCondition {
         Predicate<Class<? extends Exception>> hasRetrableCause =
             ex -> exception.getCause() != null && ex.isAssignableFrom(exception.getCause().getClass());
 
-        return exceptionsToRetryOn.stream().anyMatch(isRetryableException.or(hasRetrableCause));
+        boolean result = exceptionsToRetryOn.stream().anyMatch(isRetryableException.or(hasRetrableCause));
+
+        if (result) {
+            context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)
+                   .add(ExecutionLogType.RETRY, () -> "Retryable exception encountered.", exception);
+        }
+
+        return result;
     }
 
     /**

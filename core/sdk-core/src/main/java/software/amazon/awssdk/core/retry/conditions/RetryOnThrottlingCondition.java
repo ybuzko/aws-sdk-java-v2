@@ -16,9 +16,11 @@
 package software.amazon.awssdk.core.retry.conditions;
 
 import software.amazon.awssdk.annotations.SdkPublicApi;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.core.retry.RetryUtils;
 import software.amazon.awssdk.utils.ToString;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * A {@link RetryCondition} that will return true if the provided exception seems to be due to a throttling error from the
@@ -35,7 +37,12 @@ public final class RetryOnThrottlingCondition implements RetryCondition {
 
     @Override
     public boolean shouldRetry(RetryPolicyContext context) {
-        return RetryUtils.isThrottlingException(context.exception());
+        boolean isThrottlingException = RetryUtils.isThrottlingException(context.exception());
+        if (isThrottlingException) {
+            context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)
+                   .add(ExecutionLogType.RETRY, () -> "Throttling exception encountered.", context.exception());
+        }
+        return isThrottlingException;
     }
 
     @Override

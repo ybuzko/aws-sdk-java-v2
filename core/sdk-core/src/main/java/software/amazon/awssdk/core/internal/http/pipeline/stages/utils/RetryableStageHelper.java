@@ -26,6 +26,7 @@ import software.amazon.awssdk.core.exception.NonRetryableException;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.interceptor.ExecutionAttribute;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.internal.InternalCoreExecutionAttribute;
 import software.amazon.awssdk.core.internal.http.HttpClientDependencies;
 import software.amazon.awssdk.core.internal.http.RequestExecutionContext;
@@ -40,6 +41,8 @@ import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.core.retry.RetryUtils;
 import software.amazon.awssdk.http.SdkHttpFullRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
+import software.amazon.awssdk.utils.executionlog.ExecutionLog;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * Contains the logic shared by {@link RetryableStage} and {@link AsyncRetryableStage} when querying and interacting with a
@@ -57,6 +60,7 @@ public class RetryableStageHelper {
     private final RetryPolicy retryPolicy;
     private final RateLimitingTokenBucket rateLimitingTokenBucket;
     private final HttpClientDependencies dependencies;
+    private final ExecutionLog executionLog;
 
     private int attemptNumber = 0;
     private SdkHttpResponse lastResponse = null;
@@ -71,6 +75,7 @@ public class RetryableStageHelper {
         this.retryPolicy = dependencies.clientConfiguration().option(SdkClientOption.RETRY_POLICY);
         this.rateLimitingTokenBucket = rateLimitingTokenBucket;
         this.dependencies = dependencies;
+        this.executionLog = context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG);
     }
 
     /**
@@ -79,6 +84,7 @@ public class RetryableStageHelper {
     public void startingAttempt() {
         ++attemptNumber;
         context.executionAttributes().putAttribute(InternalCoreExecutionAttribute.EXECUTION_ATTEMPT, attemptNumber);
+        executionLog.add(ExecutionLogType.RETRY, () -> "Beginning attempt " + attemptNumber);
     }
 
     /**
@@ -139,6 +145,7 @@ public class RetryableStageHelper {
         SdkStandardLogger.REQUEST_LOGGER.debug(() -> "Retryable error detected. Will retry in " +
                                                      backoffDelay.toMillis() + "ms. Request attempt number " +
                                                      attemptNumber, lastException);
+        executionLog.add(ExecutionLogType.RETRY, () -> "Request will be retried after " + backoffDelay.toMillis(), lastException);
     }
 
     /**
@@ -155,6 +162,9 @@ public class RetryableStageHelper {
      */
     public void logSendingRequest() {
         SdkStandardLogger.REQUEST_LOGGER.debug(() -> (isInitialAttempt() ? "Sending" : "Retrying") + " Request: " + request);
+        if (!isInitialAttempt()) {
+            executionLog.add(ExecutionLogType.RETRY, () -> "Retrying request.");
+        }
     }
 
     /**

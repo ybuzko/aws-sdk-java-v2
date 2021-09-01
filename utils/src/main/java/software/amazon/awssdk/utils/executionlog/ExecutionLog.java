@@ -15,25 +15,30 @@
 
 package software.amazon.awssdk.utils.executionlog;
 
-import java.util.List;
 import java.util.function.Supplier;
 import software.amazon.awssdk.utils.internal.executionlog.DefaultExecutionLog;
-import software.amazon.awssdk.utils.internal.executionlog.NoOpExecutionLog;
+import software.amazon.awssdk.utils.internal.executionlog.NoopExecutionLog;
 
 public interface ExecutionLog {
     static ExecutionLog create(ExecutionLogType... enabledLogTypes) {
         return new DefaultExecutionLog(enabledLogTypes);
     }
 
-    static ExecutionLog createNoop() {
-        return new NoOpExecutionLog();
+    static ExecutionLog disabled() {
+        return new NoopExecutionLog();
     }
+
+    String serviceName();
+
+    String operationName();
+
+    String log();
+
+    void serviceName(String serviceName);
+
+    void operationName(String operationName);
 
     void add(ExecutionLogType logType, Supplier<String> msg);
 
     void add(ExecutionLogType logType, Supplier<String> msg, Throwable throwable);
-
-    List<ExecutionLogEntry> entries();
-
-    String entriesLog();
 }

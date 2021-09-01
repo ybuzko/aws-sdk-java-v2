@@ -1,1 +1,2 @@
 software.amazon.awssdk.core.internal.interceptor.HttpChecksumRequiredInterceptor
+software.amazon.awssdk.core.internal.interceptor.ExecutionLogInterceptor

@@ -21,6 +21,7 @@ import java.util.Optional;
 import software.amazon.awssdk.annotations.SdkPublicApi;
 import software.amazon.awssdk.core.interceptor.ExecutionAttribute;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
+import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.core.internal.capacity.TokenBucket;
 import software.amazon.awssdk.core.internal.retry.SdkDefaultRetrySetting;
 import software.amazon.awssdk.core.retry.RetryMode;
@@ -29,6 +30,7 @@ import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.utils.Logger;
 import software.amazon.awssdk.utils.ToString;
 import software.amazon.awssdk.utils.Validate;
+import software.amazon.awssdk.utils.executionlog.ExecutionLogType;
 
 /**
  * A {@link RetryCondition} that limits the number of retries made by the SDK using a token bucket algorithm. "Tokens" are
@@ -133,7 +135,11 @@ public class TokenBucketRetryCondition implements RetryCondition {
 
         if (!hasCapacity) {
             log.debug(() -> "This request will not be retried because the client has experienced too many recent call failures.");
+            context.executionAttributes().getAttribute(SdkExecutionAttribute.EXECUTION_LOG)
+                   .add(ExecutionLogType.RETRY, () -> "Retry capacity has been exhausted, because the client has experienced "
+                                                      + "too many recent call failures.");
         }
+
 
         return hasCapacity;
     }
