@@ -17,12 +17,15 @@ package software.amazon.awssdk.awscore.endpoint;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import software.amazon.awssdk.annotations.NotThreadSafe;
 import software.amazon.awssdk.annotations.SdkProtectedApi;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.profiles.ProfileFile;
+import software.amazon.awssdk.regions.EndpointTag;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.regions.ServiceEndpointKey;
 import software.amazon.awssdk.regions.ServiceMetadata;
 import software.amazon.awssdk.utils.Validate;
 
@@ -40,6 +43,7 @@ public final class DefaultServiceEndpointBuilder {
     private Region region;
     private ProfileFile profileFile;
     private String profileName;
+    private List<EndpointTag> endpointTags = Collections.emptyList();
 
     public DefaultServiceEndpointBuilder(String serviceName, String protocol) {
         this.serviceName = Validate.paramNotNull(serviceName, "serviceName");
@@ -64,18 +68,27 @@ public final class DefaultServiceEndpointBuilder {
         return this;
     }
 
+    public DefaultServiceEndpointBuilder withTags(List<EndpointTag> endpointTags) {
+        this.endpointTags = endpointTags;
+        return this;
+    }
+
     public URI getServiceEndpoint() {
         ServiceMetadata serviceMetadata = ServiceMetadata.of(serviceName)
                                                          .reconfigure(c -> c.profileFile(() -> profileFile)
                                                                             .profileName(profileName));
-        URI endpoint = addProtocolToServiceEndpoint(serviceMetadata.endpointFor(region));
+        URI endpoint = addProtocolToServiceEndpoint(serviceMetadata.endpointFor(ServiceEndpointKey.builder()
+                                                                                                  .region(region)
+                                                                                                  .tags(endpointTags)
+                                                                                                  .build()));
 
         if (endpoint.getHost() == null) {
-            String error = "Configured region (" + region + ") resulted in an invalid URI: " + endpoint;
+            String error = "Configured region (" + region + ") and tags (" + endpointTags + ") resulted in an invalid URI: "
+                           + endpoint + ". This is usually caused by an invalid region configuration.";
 
             List<Region> exampleRegions = serviceMetadata.regions();
             if (!exampleRegions.isEmpty()) {
-                error += " Valid region examples: " + exampleRegions;
+                error += " Valid regions: " + exampleRegions;
             }
 
             throw SdkClientException.create(error);

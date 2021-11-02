@@ -16,6 +16,7 @@
 package software.amazon.awssdk.awscore.client.builder;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.awscore.client.config.AwsAdvancedClientOption;
 import software.amazon.awssdk.awscore.client.config.AwsClientOption;
+import software.amazon.awssdk.awscore.endpoint.DualstackEnabledProvider;
 import software.amazon.awssdk.awscore.endpoint.DefaultServiceEndpointBuilder;
 import software.amazon.awssdk.awscore.eventstream.EventStreamInitialRequestInterceptor;
 import software.amazon.awssdk.awscore.interceptor.HelpfulUnknownHostExceptionInterceptor;
@@ -39,6 +41,7 @@ import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.http.SdkHttpClient;
 import software.amazon.awssdk.http.async.SdkAsyncHttpClient;
 import software.amazon.awssdk.profiles.ProfileFile;
+import software.amazon.awssdk.regions.EndpointTag;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.regions.ServiceMetadata;
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
@@ -141,6 +144,8 @@ public abstract class AwsDefaultClientBuilder<BuilderT extends AwsClientBuilder<
 
         configuration = configuration.toBuilder()
                                      .option(AwsClientOption.AWS_REGION, resolveRegion(configuration))
+                                     .option(AwsClientOption.DUALSTACK_ENDPOINT_ENABLED,
+                                             resolveDualstackEndpointEnabled(configuration))
                                      .build();
 
         return configuration.toBuilder()
@@ -176,10 +181,16 @@ public abstract class AwsDefaultClientBuilder<BuilderT extends AwsClientBuilder<
     }
 
     private URI endpointFromConfig(SdkClientConfiguration config) {
+        List<EndpointTag> endpointTags = new ArrayList<>();
+        if (Boolean.TRUE.equals(config.option(AwsClientOption.DUALSTACK_ENDPOINT_ENABLED))) {
+            endpointTags.add(EndpointTag.DUALSTACK);
+        }
+
         return new DefaultServiceEndpointBuilder(serviceEndpointPrefix(), DEFAULT_ENDPOINT_PROTOCOL)
             .withRegion(config.option(AwsClientOption.AWS_REGION))
             .withProfileFile(config.option(SdkClientOption.PROFILE_FILE))
             .withProfileName(config.option(SdkClientOption.PROFILE_NAME))
+            .withTags(endpointTags)
             .getServiceEndpoint();
     }
 
@@ -208,6 +219,29 @@ public abstract class AwsDefaultClientBuilder<BuilderT extends AwsClientBuilder<
                                             .profileName(profileName)
                                             .build()
                                             .getRegion();
+    }
+
+    /**
+     * Resolve whether a dualstack endpoint should be used for this client.
+     */
+    private Boolean resolveDualstackEndpointEnabled(SdkClientConfiguration config) {
+        return config.option(AwsClientOption.DUALSTACK_ENDPOINT_ENABLED) != null
+               ? config.option(AwsClientOption.DUALSTACK_ENDPOINT_ENABLED)
+               : dualstackEndpointFromDefaultProvider(config);
+    }
+
+    /**
+     * Load the dualstack endpoint setting from the default provider logic.
+     */
+    private Boolean dualstackEndpointFromDefaultProvider(SdkClientConfiguration config) {
+        ProfileFile profileFile = config.option(SdkClientOption.PROFILE_FILE);
+        String profileName = config.option(SdkClientOption.PROFILE_NAME);
+        return DualstackEnabledProvider.builder()
+                                       .profileFile(() -> profileFile)
+                                       .profileName(profileName)
+                                       .build()
+                                       .isDualstackEnabled()
+                                       .orElse(null);
     }
 
     /**
@@ -249,6 +283,16 @@ public abstract class AwsDefaultClientBuilder<BuilderT extends AwsClientBuilder<
 
     public final void setRegion(Region region) {
         region(region);
+    }
+
+    @Override
+    public BuilderT dualstackEnabled(Boolean dualstackEndpointEnabled) {
+        clientConfiguration.option(AwsClientOption.DUALSTACK_ENDPOINT_ENABLED, dualstackEndpointEnabled);
+        return thisBuilder();
+    }
+
+    public final void setDualstackEndpointEnabled(Boolean dualstackEndpointEnabled) {
+        dualstackEnabled(dualstackEndpointEnabled);
     }
 
     @Override

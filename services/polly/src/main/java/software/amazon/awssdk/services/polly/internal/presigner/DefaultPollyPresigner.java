@@ -35,6 +35,7 @@ import software.amazon.awssdk.auth.signer.AwsSignerExecutionAttribute;
 import software.amazon.awssdk.awscore.AwsExecutionAttribute;
 import software.amazon.awssdk.awscore.AwsRequestOverrideConfiguration;
 import software.amazon.awssdk.awscore.endpoint.DefaultServiceEndpointBuilder;
+import software.amazon.awssdk.awscore.endpoint.DualstackEnabledProvider;
 import software.amazon.awssdk.awscore.presigner.PresignRequest;
 import software.amazon.awssdk.awscore.presigner.PresignedRequest;
 import software.amazon.awssdk.core.ClientType;
@@ -45,6 +46,7 @@ import software.amazon.awssdk.core.signer.Presigner;
 import software.amazon.awssdk.core.signer.Signer;
 import software.amazon.awssdk.http.SdkHttpFullRequest;
 import software.amazon.awssdk.http.SdkHttpMethod;
+import software.amazon.awssdk.regions.EndpointTag;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.regions.providers.AwsRegionProvider;
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
@@ -68,17 +70,21 @@ public final class DefaultPollyPresigner implements PollyPresigner {
             new LazyAwsRegionProvider(DefaultAwsRegionProviderChain::new);
     private static final AwsCredentialsProvider DEFAULT_CREDENTIALS_PROVIDER =
             DefaultCredentialsProvider.create();
+    private static final DualstackEnabledProvider DEFAULT_DUALSTACK_ENABLED = DualstackEnabledProvider.builder().build();
     private static final Aws4Signer DEFAULT_SIGNER = Aws4Signer.create();
 
     private final Region region;
     private final AwsCredentialsProvider credentialsProvider;
     private final URI endpointOverride;
+    private final Boolean dualstackEnabled;
 
     private DefaultPollyPresigner(BuilderImpl builder) {
         this.region = builder.region != null ? builder.region : DEFAULT_REGION_PROVIDER.getRegion();
         this.credentialsProvider = builder.credentialsProvider != null
                 ? builder.credentialsProvider : DEFAULT_CREDENTIALS_PROVIDER;
         this.endpointOverride = builder.endpointOverride;
+        this.dualstackEnabled = builder.dualstackEnabled != null ? builder.dualstackEnabled
+                                                                 : DEFAULT_DUALSTACK_ENABLED.isDualstackEnabled().orElse(false);
     }
 
     public Region region() {
@@ -217,8 +223,14 @@ public final class DefaultPollyPresigner implements PollyPresigner {
             return endpointOverride();
         }
 
+        List<EndpointTag> endpointTags = new ArrayList<>();
+        if (Boolean.TRUE.equals(dualstackEnabled)) {
+            endpointTags.add(EndpointTag.DUALSTACK);
+        }
+
         return new DefaultServiceEndpointBuilder(SERVICE_NAME, "https")
                 .withRegion(region())
+                .withTags(endpointTags)
                 .getServiceEndpoint();
     }
 
@@ -226,6 +238,7 @@ public final class DefaultPollyPresigner implements PollyPresigner {
         private Region region;
         private AwsCredentialsProvider credentialsProvider;
         private URI endpointOverride;
+        private Boolean dualstackEnabled;
 
         @Override
         public Builder region(Region region) {
@@ -236,6 +249,12 @@ public final class DefaultPollyPresigner implements PollyPresigner {
         @Override
         public Builder credentialsProvider(AwsCredentialsProvider credentialsProvider) {
             this.credentialsProvider = credentialsProvider;
+            return this;
+        }
+
+        @Override
+        public Builder dualstackEnabled(Boolean dualstackEnabled) {
+            this.dualstackEnabled = dualstackEnabled;
             return this;
         }
 
