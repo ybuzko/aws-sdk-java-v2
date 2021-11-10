@@ -139,7 +139,9 @@ public abstract class SdkAsyncHttpClientH1TestSuite {
 
         public void init() throws Exception {
             SelfSignedCertificate ssc = new SelfSignedCertificate();
-            sslCtx = SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey()).build();
+            sslCtx = SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey())
+                .protocols("TLSv1.3")
+                                      .build();
 
             bootstrap = new ServerBootstrap()
                 .channel(NioServerSocketChannel.class)
