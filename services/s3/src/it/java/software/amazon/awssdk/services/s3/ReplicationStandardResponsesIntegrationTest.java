@@ -93,12 +93,12 @@ public class ReplicationStandardResponsesIntegrationTest extends S3IntegrationTe
             replicationStatus = headObjectResponse.replicationStatus();
         }
 
-        assertThat(replicationStatus).isEqualTo(ReplicationStatus.COMPLETE);
+        assertThat(replicationStatus).isEqualTo(ReplicationStatus.COMPLETED);
 
     }
 
     private ReplicationRule createReplicationRule(String destinationBucket) {
-        ReplicationRule replicationRule = ReplicationRule.builder()
+        return ReplicationRule.builder()
                                                          .priority(0)
                                                          .status(ReplicationRuleStatus.ENABLED)
                                                          .deleteMarkerReplication(DeleteMarkerReplication.builder()
@@ -108,8 +108,6 @@ public class ReplicationStandardResponsesIntegrationTest extends S3IntegrationTe
                                                          .destination(Destination.builder()
                                                                                  .bucket("arn:aws:s3:::" + destinationBucket)
                                                                                  .build()).build();
-
-        return  replicationRule;
 
     }
 
@@ -133,7 +131,6 @@ public class ReplicationStandardResponsesIntegrationTest extends S3IntegrationTe
         trustPolicy.append("\"Service\":\"s3.amazonaws.com\"\r\n         },\r\n         ");
         trustPolicy.append("\"Action\":\"sts:AssumeRole\"\r\n      }\r\n   ]\r\n}");
 
-        String str = trustPolicy.toString();
         CreateRoleRequest createRoleRequest = CreateRoleRequest.builder()
                                                                .roleName(roleName)
                                                                .assumeRolePolicyDocument(trustPolicy.toString()).build();
