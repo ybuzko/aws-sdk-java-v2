@@ -44,6 +44,11 @@ import software.amazon.awssdk.services.s3.model.ReplicationStatus;
 import software.amazon.awssdk.services.iam.model.Role;
 import software.amazon.awssdk.services.s3.model.VersioningConfiguration;
 
+/**
+ * Integration test verifying that "completed" replication status is returned correctly on a replicated S3 key.
+ * CS427 Issue link: https://github.com/aws/aws-sdk-java-v2/issues/2386
+ */
+
 public class ReplicationStandardResponsesIntegrationTest extends S3IntegrationTestBase {
     private static String sourceBucket = temporaryBucketName("replication-integ-test-source-bucket");
     private static String targetBucket = temporaryBucketName("replication-integ-test-target-bucket");
